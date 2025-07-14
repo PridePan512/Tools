@@ -20,16 +20,15 @@ import com.example.swipeclean.adapter.RecyclerBinAdapter
 import com.example.swipeclean.business.AlbumController
 import com.example.swipeclean.business.SwipeCleanConfigHost
 import com.example.swipeclean.model.Album
-import com.example.swipeclean.model.Constants.KEY_INTENT_ALBUM_ID
-import com.example.swipeclean.model.Constants.MIN_SHOW_LOADING_TIME
 import com.example.swipeclean.model.Photo
+import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
+import com.example.swipeclean.other.Constants.MIN_SHOW_LOADING_TIME
 import com.example.tools.R
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.loadingindicator.LoadingIndicator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Collections
 import java.util.Locale
@@ -94,11 +93,9 @@ class RecycleBinActivity : AppCompatActivity() {
             mAdapter.notifyItemRemoved(position)
             mAdapter.removePhoto(photo)
             showTotalSize(mAdapter.getTotalSize())
-            lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    AlbumController.getInstance(this@RecycleBinActivity)
-                        .converseDeleteToKeepPhoto(photo)
-                }
+            lifecycleScope.launch(Dispatchers.IO) {
+                AlbumController.getInstance(this@RecycleBinActivity)
+                    .converseDeleteToKeepPhoto(photo)
             }
             photo.isKeep = true
             photo.isDelete = false

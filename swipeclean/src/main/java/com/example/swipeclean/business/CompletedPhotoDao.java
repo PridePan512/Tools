@@ -26,7 +26,7 @@ public class CompletedPhotoDao extends BaseDao {
 
         try (Cursor cursor = db.query(CompletedPhotoTable.TABLE_NAME,
                 null, CompletedPhotoTable.Columns.DELETED + " = ?", new String[]{"1"}, null, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
+            if (cursor.moveToFirst()) {
                 do {
                     photoIds.add(cursor.getLong(cursor.getColumnIndexOrThrow(CompletedPhotoTable.Columns.SOURCE_ID)));
                 } while (cursor.moveToNext());
@@ -43,7 +43,7 @@ public class CompletedPhotoDao extends BaseDao {
 
         try (Cursor cursor = db.query(CompletedPhotoTable.TABLE_NAME,
                 null, CompletedPhotoTable.Columns.DELETED + " = ?", new String[]{"0"}, null, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
+            if (cursor.moveToFirst()) {
                 do {
                     photoIds.add(cursor.getLong(cursor.getColumnIndexOrThrow(CompletedPhotoTable.Columns.SOURCE_ID)));
                 } while (cursor.moveToNext());

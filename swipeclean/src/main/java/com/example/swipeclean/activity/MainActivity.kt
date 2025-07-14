@@ -26,8 +26,8 @@ import com.example.swipeclean.adapter.AlbumAdapter
 import com.example.swipeclean.business.AlbumController
 import com.example.swipeclean.business.SwipeCleanConfigHost
 import com.example.swipeclean.model.Album
-import com.example.swipeclean.model.Constants.KEY_INTENT_ALBUM_ID
-import com.example.swipeclean.model.Constants.MIN_SHOW_LOADING_TIME
+import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
+import com.example.swipeclean.other.Constants.MIN_SHOW_LOADING_TIME
 import com.example.tools.R
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -277,7 +277,7 @@ class MainActivity : AppCompatActivity() {
         mAdapter.setData(albums)
     }
 
-    fun isAlbumOperated(albumId: Long): Boolean {
+    private fun isAlbumOperated(albumId: Long): Boolean {
         val album = AlbumController.getInstance(this)
             .albums
             ?.find { it.getId() == albumId }

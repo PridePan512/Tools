@@ -1,4 +1,4 @@
-package com.example.swipeclean.model
+package com.example.swipeclean.other
 
 object Constants {
     const val MIN_SHOW_LOADING_TIME = 1000L

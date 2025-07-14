@@ -30,12 +30,13 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.example.lib.utils.AndroidUtils
 import com.example.swipeclean.business.AlbumController
 import com.example.swipeclean.model.Album
-import com.example.swipeclean.model.Constants.DOWN_IMAGE_SCALE
-import com.example.swipeclean.model.Constants.KEY_INTENT_ALBUM_ID
-import com.example.swipeclean.model.Constants.SHOW_TAG_TRANSLATE_X
 import com.example.swipeclean.model.Photo
+import com.example.swipeclean.other.Constants.DOWN_IMAGE_SCALE
+import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
+import com.example.swipeclean.other.Constants.SHOW_TAG_TRANSLATE_X
 import com.example.tools.R
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
@@ -65,7 +66,7 @@ class OperationActivity : AppCompatActivity() {
     private var mTouchY = -1f
     private var mIsAnimating = false
     private var mIsOperating = false
-    private var mScreenWidth = 800
+    private var mScreenWidth = AndroidUtils.getScreenWidth()
     private var mAlbum: Album? = null
 
     private enum class OperationType {
@@ -82,7 +83,6 @@ class OperationActivity : AppCompatActivity() {
         setPhotos()
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -92,8 +92,6 @@ class OperationActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
-        mScreenWidth = Resources.getSystem().displayMetrics.widthPixels
         initView()
     }
 
