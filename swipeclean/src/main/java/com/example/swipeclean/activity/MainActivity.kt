@@ -24,7 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.lib.utils.StringUtils
 import com.example.swipeclean.adapter.AlbumAdapter
 import com.example.swipeclean.business.AlbumController
-import com.example.swipeclean.business.SwipeCleanConfigHost
+import com.example.swipeclean.business.ConfigHost
 import com.example.swipeclean.model.Album
 import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
 import com.example.swipeclean.other.Constants.MIN_SHOW_LOADING_TIME
@@ -187,7 +187,7 @@ class MainActivity : AppCompatActivity() {
 
                             mCleanedTextView.text =
                                 StringUtils.getHumanFriendlyByteCount(
-                                    SwipeCleanConfigHost.getCleanedSize(
+                                    ConfigHost.getCleanedSize(
                                         this@MainActivity
                                     ), 1
                                 )

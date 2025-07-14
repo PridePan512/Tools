@@ -18,7 +18,7 @@ import com.example.lib.utils.MediaStoreUtils
 import com.example.lib.utils.StringUtils.getHumanFriendlyByteCount
 import com.example.swipeclean.adapter.RecyclerBinAdapter
 import com.example.swipeclean.business.AlbumController
-import com.example.swipeclean.business.SwipeCleanConfigHost
+import com.example.swipeclean.business.ConfigHost
 import com.example.swipeclean.model.Album
 import com.example.swipeclean.model.Photo
 import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
@@ -125,7 +125,7 @@ class RecycleBinActivity : AppCompatActivity() {
                     val startTime = SystemClock.elapsedRealtime()
 
                     lifecycleScope.launch(Dispatchers.IO) {
-                        SwipeCleanConfigHost.setCleanedSize(
+                        ConfigHost.setCleanedSize(
                             mAdapter.getTotalSize(),
                             this@RecycleBinActivity
                         )

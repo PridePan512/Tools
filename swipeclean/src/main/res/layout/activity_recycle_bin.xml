@@ -156,7 +156,7 @@
             android:layout_height="148dp"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="6dp"
-            android:background="@drawable/ic_vector_free_up_bg"
+            android:background="@drawable/ic_vector_card_free_up_bg"
             app:layout_constraintBottom_toTopOf="@+id/btn_got_it"
             app:layout_constraintEnd_toStartOf="@+id/v_deleted"
             app:layout_constraintStart_toStartOf="parent"
@@ -205,7 +205,7 @@
             android:layout_height="148dp"
             android:layout_marginStart="6dp"
             android:layout_marginEnd="20dp"
-            android:background="@drawable/ic_vector_deleted_bg"
+            android:background="@drawable/ic_vector_card_deleted_bg"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/v_free_up"
             app:layout_constraintTop_toTopOf="@id/v_free_up">
