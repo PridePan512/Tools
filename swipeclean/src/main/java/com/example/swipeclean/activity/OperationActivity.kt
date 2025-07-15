@@ -163,7 +163,7 @@ class OperationActivity : AppCompatActivity() {
 
     private fun setPhoto(image: ImageView, photo: Photo) {
         Glide.with(this)
-            .load(photo.path)
+            .load(photo.sourcePath)
             .priority(Priority.HIGH)
             .error(R.drawable.ic_vector_image)
             .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -190,7 +190,7 @@ class OperationActivity : AppCompatActivity() {
     private fun refreshTrashButton() {
         mAlbum?.let {
             val deleteCount: Int =
-                it.photos.stream().filter { item -> item.isDelete }.count().toInt();
+                it.photos.stream().filter { item -> item.isDelete() }.count().toInt()
             mTrashButton.isEnabled = deleteCount != 0
             mTrashButton.text =
                 String.format(
@@ -368,7 +368,7 @@ class OperationActivity : AppCompatActivity() {
             DOWN_IMAGE_SCALE
         )
         val textAlphaAnimator = ObjectAnimator.ofFloat(
-            if (lastPhoto.isKeep) mKeepTextView else mDeleteTextView,
+            if (lastPhoto.isKeep()) mKeepTextView else mDeleteTextView,
             View.ALPHA,
             1f,
             0f
@@ -376,7 +376,7 @@ class OperationActivity : AppCompatActivity() {
         val translateXAnimator = ObjectAnimator.ofFloat(
             mUpImageContainer,
             View.TRANSLATION_X,
-            (mScreenWidth * (if (lastPhoto.isKeep) 1 else -1)).toFloat(),
+            (mScreenWidth * (if (lastPhoto.isKeep()) 1 else -1)).toFloat(),
             0f
         )
         val translateYAnimator =
@@ -385,7 +385,7 @@ class OperationActivity : AppCompatActivity() {
         val rotateAnimator = ObjectAnimator.ofFloat(
             mUpImageContainer,
             View.ROTATION,
-            (20 * (if (lastPhoto.isKeep) 1 else -1)).toFloat(),
+            (20 * (if (lastPhoto.isKeep()) 1 else -1)).toFloat(),
             0f
         )
         val animatorSet = AnimatorSet()
@@ -432,6 +432,7 @@ class OperationActivity : AppCompatActivity() {
 
         when (operationType) {
             OperationType.Cancel -> {
+                photo.cancelOperated()
                 lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         AlbumController.cleanCompletedPhoto(
@@ -439,33 +440,29 @@ class OperationActivity : AppCompatActivity() {
                         )
                     }
                 }
-                photo.isKeep = false
-                photo.isDelete = false
                 refreshTrashButton()
             }
 
             OperationType.Keep -> {
+                photo.doKeep()
                 lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
-                        AlbumController.addKeepPhoto(
+                        AlbumController.addPhoto(
                             photo
                         )
                     }
                 }
-                photo.isKeep = true
-                photo.isDelete = false
             }
 
             OperationType.Delete -> {
+                photo.doDelete()
                 lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
-                        AlbumController.addDeletePhoto(
+                        AlbumController.addPhoto(
                             photo
                         )
                     }
                 }
-                photo.isKeep = false
-                photo.isDelete = true
                 refreshTrashButton()
             }
         }
@@ -476,7 +473,7 @@ class OperationActivity : AppCompatActivity() {
         }
 
         mAlbum?.takeIf { it.isOperated() }?.let { album ->
-            if (album.photos.any { it.isDelete }) {
+            if (album.photos.any { it.isDelete() }) {
                 openTrashActivity()
             }
             finish()

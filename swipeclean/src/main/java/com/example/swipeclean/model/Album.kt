@@ -8,7 +8,7 @@ data class Album(
     fun getCoverPath(): String? {
         if (photos.isEmpty()) return null
         val photo = photos.firstOrNull { !it.isOperated() }
-        return photo?.path ?: photos.last().path
+        return photo?.sourcePath ?: photos.last().sourcePath
     }
 
     fun getId(): Long = formatData.hashCode().toLong()
@@ -17,7 +17,7 @@ data class Album(
 
     fun getTotalCount(): Int = photos.size
 
-    fun getCompletedCount(): Int = photos.count { it.isKeep }
+    fun getCompletedCount(): Int = photos.count { it.isKeep() }
 
     fun getOperatedIndex(): Int = photos.count { it.isOperated() }
 

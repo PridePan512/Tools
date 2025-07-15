@@ -115,8 +115,7 @@ class MainActivity : AppCompatActivity() {
 
                             lifecycleScope.launch(Dispatchers.IO) {
                                 for (photo in album.photos) {
-                                    photo.isDelete = false
-                                    photo.isKeep = false
+                                    photo.cancelOperated()
                                     AlbumController.cleanCompletedPhoto(photo)
                                 }
 

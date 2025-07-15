@@ -60,7 +60,7 @@ class RecycleBinActivity : AppCompatActivity() {
             item.getId() == intent.getLongExtra(KEY_INTENT_ALBUM_ID, 0)
         }
 
-        showDeletedPhotos(mAlbum?.photos?.filter { item -> item.isDelete })
+        showDeletedPhotos(mAlbum?.photos?.filter { item -> item.isDelete() })
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
@@ -93,11 +93,10 @@ class RecycleBinActivity : AppCompatActivity() {
             mAdapter.notifyItemRemoved(position)
             mAdapter.removePhoto(photo)
             showTotalSize(mAdapter.getTotalSize())
+            photo.doKeep()
             lifecycleScope.launch(Dispatchers.IO) {
                 AlbumController.converseDeleteToKeepPhoto(photo)
             }
-            photo.isKeep = true
-            photo.isDelete = false
 
             if (mAdapter.photos.isEmpty()) {
                 finish()
@@ -133,11 +132,11 @@ class RecycleBinActivity : AppCompatActivity() {
 
                         for (photo in deletedPhotos) {
                             finishCount++
-                            destPaths.add(photo.path)
+                            destPaths.add(photo.sourcePath)
                             mAlbum?.photos?.remove(photo)
                             AlbumController.cleanCompletedPhoto(photo)
 
-                            val file = File(photo.path)
+                            val file = File(photo.sourcePath)
                             if (file.exists()) {
                                 file.delete()
                             }
@@ -173,8 +172,7 @@ class RecycleBinActivity : AppCompatActivity() {
             mRecyclerView.visibility = View.GONE
             lifecycleScope.launch(Dispatchers.IO) {
                 for (photo in mAdapter.photos) {
-                    photo.isDelete = false
-                    photo.isKeep = true
+                    photo.doKeep()
                     AlbumController.converseDeleteToKeepPhoto(photo)
                 }
 
