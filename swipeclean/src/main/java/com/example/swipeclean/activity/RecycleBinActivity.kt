@@ -142,12 +142,12 @@ class RecycleBinActivity : AppCompatActivity() {
                             }
 
                             if (finishCount % 100 == 0) {
-                                MediaStoreUtils.scanSync(this@RecycleBinActivity, destPaths)
+                                MediaStoreUtils.scan(this@RecycleBinActivity, destPaths)
                                 destPaths.clear()
                             }
                         }
 
-                        MediaStoreUtils.scanSync(this@RecycleBinActivity, destPaths)
+                        MediaStoreUtils.scan(this@RecycleBinActivity, destPaths)
 
                         runOnUiThread {
                             val spendTime = SystemClock.elapsedRealtime() - startTime
