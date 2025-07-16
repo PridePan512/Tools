@@ -41,7 +41,6 @@ import com.example.tools.R
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
@@ -433,35 +432,23 @@ class OperationActivity : AppCompatActivity() {
         when (operationType) {
             OperationType.Cancel -> {
                 photo.cancelOperated()
-                lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        AlbumController.cleanCompletedPhoto(
-                            photo
-                        )
-                    }
+                lifecycleScope.launch(Dispatchers.IO) {
+                    AlbumController.cleanCompletedPhoto(photo)
                 }
                 refreshTrashButton()
             }
 
             OperationType.Keep -> {
                 photo.doKeep()
-                lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        AlbumController.addPhoto(
-                            photo
-                        )
-                    }
+                lifecycleScope.launch(Dispatchers.IO) {
+                    AlbumController.addPhoto(photo)
                 }
             }
 
             OperationType.Delete -> {
                 photo.doDelete()
-                lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        AlbumController.addPhoto(
-                            photo
-                        )
-                    }
+                lifecycleScope.launch(Dispatchers.IO) {
+                    AlbumController.addPhoto(photo)
                 }
                 refreshTrashButton()
             }
@@ -597,6 +584,7 @@ class OperationActivity : AppCompatActivity() {
                     mMagnifyImageView.translationX =
                         (mScreenWidth - mMagnifyImageView.width).toFloat()
                 }
+
             } else {
                 if (x > mScreenWidth - mMagnifyImageView.width && y < mMagnifyImageView.height) {
                     mMagnifyImageView.translationX = 0f
@@ -613,6 +601,7 @@ class OperationActivity : AppCompatActivity() {
                 }
                 mMagnifyImageView.postDelayed(mShowMagnifyPhotoRunnable, 500)
             }
+
         } else if (motionEvent.actionMasked == MotionEvent.ACTION_MOVE) {
             val translationX = motionEvent.rawX - mTouchX
             val translationY = motionEvent.rawY - mTouchY
@@ -622,6 +611,7 @@ class OperationActivity : AppCompatActivity() {
             //Ignore tiny translation
             if (absTranslationX < 10 && abs(translationY.toDouble()) < 10) {
                 return@OnTouchListener true
+
             } else {
                 //Cancel magnify
                 mMagnifyImageView.removeCallbacks(mShowMagnifyPhotoRunnable)
@@ -637,6 +627,7 @@ class OperationActivity : AppCompatActivity() {
                         mMagnifyImageView.translationX =
                             (mScreenWidth - mMagnifyImageView.width).toFloat()
                     }
+
                 } else {
                     if (x > mScreenWidth - mMagnifyImageView.width && y < mMagnifyImageView.height) {
                         mMagnifyImageView.translationX = 0f
@@ -678,14 +669,17 @@ class OperationActivity : AppCompatActivity() {
                 if (isRightSwipe) {
                     mKeepImageView.scaleX = scaleFactor
                     mKeepImageView.scaleY = scaleFactor
+
                 } else {
                     mDeleteImageView.scaleX = scaleFactor
                     mDeleteImageView.scaleY = scaleFactor
                 }
+
             } else {
                 mDeleteImageView.alpha = if (isRightSwipe) 0f else 1f
                 mKeepImageView.alpha = if (isRightSwipe) 1f else 0f
             }
+
         } else if (motionEvent.actionMasked == MotionEvent.ACTION_UP || motionEvent.actionMasked == MotionEvent.ACTION_CANCEL || motionEvent.actionMasked == MotionEvent.ACTION_POINTER_UP) {
             mIsOperating = false
             if (mShowMagnifyPhotoRunnable != null) {
@@ -751,6 +745,7 @@ class OperationActivity : AppCompatActivity() {
                     }
                 })
                 animatorSet.start()
+
             } else {
                 val keepAlphaAnimator = ObjectAnimator.ofFloat(mKeepTextView, View.ALPHA, 0f)
                 val deleteAlphaAnimator = ObjectAnimator.ofFloat(mDeleteTextView, View.ALPHA, 0f)

@@ -25,6 +25,7 @@ import com.example.lib.utils.StringUtils
 import com.example.swipeclean.adapter.AlbumAdapter
 import com.example.swipeclean.business.AlbumController
 import com.example.swipeclean.business.ConfigHost
+import com.example.swipeclean.dialog.SortDialogFragment
 import com.example.swipeclean.model.Album
 import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
 import com.example.swipeclean.other.Constants.MIN_SHOW_LOADING_TIME
@@ -33,7 +34,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Collections
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -47,16 +47,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mSortButton: MaterialButton
     private lateinit var mAdapter: AlbumAdapter
     private lateinit var mLoadingView: View
-    private var mSortOrderMode = SortOrderMode.DATE
-    private val mSizeComparator: Comparator<Album> =
-        Comparator.comparingInt(Album::getTotalCount).reversed()
-    private val mDateComparator: Comparator<Album> =
-        Comparator.comparingLong(Album::getDateTime).reversed()
-
-    enum class SortOrderMode {
-        SIZE,
-        DATE
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -152,9 +142,13 @@ class MainActivity : AppCompatActivity() {
         mRecyclerView.setHasFixedSize(true)
         mRecyclerView.setLayoutManager(LinearLayoutManager(this))
         mRecyclerView.setAdapter(mAdapter)
+
+        findViewById<View>(R.id.btn_sort_order).setOnClickListener {
+            SortDialogFragment.newInstance().show(supportFragmentManager, "SortDialogFragment")
+        }
     }
 
-    private fun loadAlbums() {
+    fun loadAlbums() {
         mLoadingView.visibility = View.VISIBLE
         lifecycleScope.launch(Dispatchers.IO) {
             val startTime = SystemClock.elapsedRealtime()
@@ -171,13 +165,6 @@ class MainActivity : AppCompatActivity() {
                             mSortButton.visibility = View.GONE
 
                         } else {
-//                            mSortButton.setOnClickListener(ReClickPreventViewClickListener.defendFor {
-//                                mSortOrderMode =
-//                                    if (mSortOrderMode == SortOrderMode.SIZE) SortOrderMode.DATE else SortOrderMode.SIZE
-//                                sortAlbums(albums)
-//                                mRecyclerView.scrollToPosition(0)
-//                            })
-
                             mSortButton.visibility = View.VISIBLE
                             mEmptyView.visibility = View.GONE
                             mAlbumsView.visibility = View.VISIBLE
@@ -266,12 +253,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun sortAlbums(albums: List<Album>) {
-        Collections.sort(
-            albums,
-            if (mSortOrderMode == SortOrderMode.SIZE) mSizeComparator else mDateComparator
-        )
+    private fun sortAlbums(albums: ArrayList<Album>) {
+        when (ConfigHost.getSortType(this)) {
+            SortDialogFragment.DATE_DOWN -> {
+                albums.sortByDescending(Album::getDateTime)
+            }
+
+            SortDialogFragment.DATE_UP -> {
+                albums.sortBy(Album::getDateTime)
+            }
+
+            SortDialogFragment.SIZE_DOWN -> {
+                albums.sortByDescending(Album::getTotalCount)
+            }
+
+            SortDialogFragment.SIZE_UP -> {
+                albums.sortBy(Album::getTotalCount)
+            }
+
+            SortDialogFragment.UNFINISHED_DOWN -> {
+                albums.sortBy(Album::isOperated)
+            }
+
+            SortDialogFragment.UNFINISHED_UP -> {
+                albums.sortByDescending(Album::isOperated)
+            }
+        }
         mAdapter.setData(albums)
+        mRecyclerView.scrollToPosition(0)
     }
 
     private fun isAlbumOperated(albumId: Long): Boolean {

@@ -43,7 +43,7 @@ object AlbumController {
     }
 
     @WorkerThread
-    fun loadAlbums(): List<Album> {
+    fun loadAlbums(): ArrayList<Album> {
         mAlbums.clear()
 
         val deleteIds = mPhotoDao.getDeletePhotoIds()
