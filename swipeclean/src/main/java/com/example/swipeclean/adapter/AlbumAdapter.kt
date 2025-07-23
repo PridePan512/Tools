@@ -46,6 +46,9 @@ class AlbumAdapter(
         position: Int
     ) {
         val context = holder.itemView.context
+        if (context == null) {
+            return
+        }
         val album = mAlbums[position]
         Glide
             .with(context)

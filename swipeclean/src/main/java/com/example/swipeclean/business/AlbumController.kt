@@ -77,7 +77,7 @@ object AlbumController {
         )
 
         val albums = HashMap<String, Album>()
-        cursor?.let {
+        cursor?.use {
             val idIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             val dateAddedIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
             val dateTakenIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
@@ -115,14 +115,13 @@ object AlbumController {
                 ).format(photo.date)
 
                 if (!albums.containsKey(month)) {
-                    albums.put(month, Album(ArrayList<Photo>(), month))
+                    albums.put(month, Album(ArrayList(), month))
                 }
                 val album = albums.get(month)
                 album?.apply {
                     photos.add(photo)
                 }
             }
-            cursor.close()
         }
 
         albums.forEach { _, v ->
@@ -148,12 +147,11 @@ object AlbumController {
             null,
             null
         )
-        cursor?.let {
+        cursor?.use {
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
                 allPhotoIds.add(id)
             }
-            cursor.close()
         }
 
         operationIds.removeAll(allPhotoIds)

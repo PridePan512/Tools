@@ -78,27 +78,30 @@ class SortDialogFragment(@LayoutRes contentLayoutId: Int = R.layout.sheet_dialog
         }
 
         vDate.setOnClickListener {
-            var targetSortType = when (sortType) {
-                DATE_DOWN -> DATE_UP
-                else -> DATE_DOWN
-            }
-            doOnClick(targetSortType, activity)
+            doOnClick(
+                when (sortType) {
+                    DATE_DOWN -> DATE_UP
+                    else -> DATE_DOWN
+                }, activity
+            )
         }
 
         vSize.setOnClickListener {
-            var targetSortType = when (sortType) {
-                SIZE_DOWN -> SIZE_UP
-                else -> SIZE_DOWN
-            }
-            doOnClick(targetSortType, activity)
+            doOnClick(
+                when (sortType) {
+                    SIZE_DOWN -> SIZE_UP
+                    else -> SIZE_DOWN
+                }, activity
+            )
         }
 
         vUnfinished.setOnClickListener {
-            var targetSortType = when (sortType) {
-                UNFINISHED_DOWN -> UNFINISHED_UP
-                else -> UNFINISHED_DOWN
-            }
-            doOnClick(targetSortType, activity)
+            doOnClick(
+                when (sortType) {
+                    UNFINISHED_DOWN -> UNFINISHED_UP
+                    else -> UNFINISHED_DOWN
+                }, activity
+            )
         }
     }
 

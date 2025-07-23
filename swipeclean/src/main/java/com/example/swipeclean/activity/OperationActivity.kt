@@ -174,13 +174,12 @@ class OperationActivity : AppCompatActivity() {
         mAlbum?.let {
             mDateTextView.text = it.formatData
             val completeCount: Int = it.getOperatedIndex()
-            val totalCount: Int = it.photos.size
             mCountTextView.text =
                 String.format(
                     Locale.getDefault(),
                     "%d/%d",
                     completeCount + 1,
-                    totalCount
+                    it.photos.size
                 )
             mCancelButton.isEnabled = completeCount != 0
         }
@@ -696,13 +695,13 @@ class OperationActivity : AppCompatActivity() {
             val isRightSwipe = translationX > 0
 
             if (absTranslationX >= SHOW_TAG_TRANSLATE_X) {
-                val scaleXAnimator = ObjectAnimator.ofFloat<View>(
+                val scaleXAnimator = ObjectAnimator.ofFloat(
                     mDownImageView,
                     View.SCALE_X,
                     DOWN_IMAGE_SCALE,
                     1f
                 )
-                val scaleYAnimator = ObjectAnimator.ofFloat<View>(
+                val scaleYAnimator = ObjectAnimator.ofFloat(
                     mDownImageView,
                     View.SCALE_Y,
                     DOWN_IMAGE_SCALE,
