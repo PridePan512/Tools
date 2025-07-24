@@ -105,9 +105,9 @@ class MainActivity : AppCompatActivity() {
                             val startTime = SystemClock.elapsedRealtime()
 
                             lifecycleScope.launch(Dispatchers.IO) {
-                                for (photo in album.photos) {
-                                    photo.cancelOperated()
-                                    AlbumController.cleanCompletedPhoto(photo)
+                                album.photos.let { photos ->
+                                    AlbumController.cleanCompletedPhoto(photos)
+                                    photos.forEach { it.cancelOperated() }
                                 }
 
                                 runOnUiThread {

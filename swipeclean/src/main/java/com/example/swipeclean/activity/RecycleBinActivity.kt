@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.MediaStore
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
@@ -40,9 +39,6 @@ import java.util.Collections
 import java.util.Locale
 
 class RecycleBinActivity : AppCompatActivity() {
-
-    private val TAG = "RecycleBinActivity"
-
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mAdapter: RecyclerBinAdapter
     private lateinit var mEmptyTrashButton: View
@@ -63,10 +59,11 @@ class RecycleBinActivity : AppCompatActivity() {
                         mAdapter.getTotalSize(),
                         this@RecycleBinActivity
                     )
-                    mDeletePhotos!!.forEach {
+                    mDeletePhotos?.let {
                         AlbumController.cleanCompletedPhoto(it)
-                        mAlbum?.photos?.remove(it)
+                        mAlbum?.photos?.removeAll(it)
                     }
+
                     delay(MIN_SHOW_LOADING_TIME)
 
                     runOnUiThread {
@@ -188,9 +185,9 @@ class RecycleBinActivity : AppCompatActivity() {
             showTotalSize(0)
             mRecyclerView.visibility = View.GONE
             lifecycleScope.launch(Dispatchers.IO) {
-                for (photo in mAdapter.photos) {
-                    photo.doKeep()
-                    AlbumController.converseDeleteToKeepPhoto(photo)
+                mAdapter.photos.let { photos ->
+                    AlbumController.converseDeleteToKeepPhoto(photos)
+                    photos.forEach { it.doKeep() }
                 }
 
                 runOnUiThread {
@@ -240,16 +237,14 @@ class RecycleBinActivity : AppCompatActivity() {
                 mAdapter.getTotalSize(),
                 this@RecycleBinActivity
             )
-            mDeletePhotos!!.forEach { photo ->
-                try {
-                    photo.sourceUri?.let {
-                        contentResolver.delete(it, null, null)
-                        AlbumController.cleanCompletedPhoto(photo)
-                        mAlbum?.photos?.remove(photo)
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "删除失败 => Uri：${photo.sourceUri} ", e)
-                }
+
+            mDeletePhotos?.let { deletePhotos ->
+                AlbumController.cleanCompletedPhoto(deletePhotos)
+                mAlbum?.photos?.removeAll(deletePhotos)
+
+                deletePhotos
+                    .mapNotNull { it.sourceUri }
+                    .forEach { contentResolver.delete(it, null, null) }
             }
             delay(MIN_SHOW_LOADING_TIME)
 

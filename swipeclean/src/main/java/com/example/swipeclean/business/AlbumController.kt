@@ -18,7 +18,7 @@ object AlbumController {
 
     fun init(applicationContext: Context) {
         mAppContext = applicationContext
-        mAlbums = ArrayList<Album>()
+        mAlbums = ArrayList()
 
         mPhotoDao = Room.databaseBuilder(applicationContext, PhotoDataBase::class.java, "PhotoDB")
             .build().photoDao()
@@ -39,8 +39,18 @@ object AlbumController {
     }
 
     @WorkerThread
+    fun cleanCompletedPhoto(photos: List<Photo>) {
+        mPhotoDao.delete(photos.map { it.sourceId })
+    }
+
+    @WorkerThread
     fun converseDeleteToKeepPhoto(photo: Photo) {
         mPhotoDao.convertDeleteToKeep(photo.sourceId)
+    }
+
+    @WorkerThread
+    fun converseDeleteToKeepPhoto(photos: List<Photo>) {
+        mPhotoDao.convertDeleteToKeep(photos.map { it.sourceId })
     }
 
     @WorkerThread
@@ -114,13 +124,8 @@ object AlbumController {
                     Locale.getDefault()
                 ).format(photo.date)
 
-                if (!albums.containsKey(month)) {
-                    albums.put(month, Album(ArrayList(), month))
-                }
-                val album = albums.get(month)
-                album?.apply {
-                    photos.add(photo)
-                }
+                albums.takeIf { !it.containsKey(month) }?.put(month, Album(ArrayList(), month))
+                albums.get(month)?.photos?.add(photo)
             }
         }
 
@@ -134,8 +139,8 @@ object AlbumController {
 
     @WorkerThread
     fun syncDatabase() {
-        val allPhotoIds = HashSet<Long>()
-        val operationIds = HashSet<Long>()
+        val allPhotoIds = ArrayList<Long>()
+        val operationIds = ArrayList<Long>()
 
         operationIds.addAll(mPhotoDao.getDeletePhotoIds())
         operationIds.addAll(mPhotoDao.getKeepPhotoIds())
@@ -148,17 +153,14 @@ object AlbumController {
             null
         )
         cursor?.use {
+            val idIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             while (cursor.moveToNext()) {
-                val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
-                allPhotoIds.add(id)
+                allPhotoIds.add(cursor.getLong(idIndex))
             }
         }
 
         operationIds.removeAll(allPhotoIds)
-
-        for (id in operationIds) {
-            mPhotoDao.delete(id)
-        }
+        mPhotoDao.delete(operationIds)
     }
 
 }

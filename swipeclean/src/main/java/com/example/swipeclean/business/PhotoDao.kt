@@ -22,6 +22,12 @@ interface PhotoDao {
     @Query("DELETE FROM photo WHERE sourceId = :sourceId")
     fun delete(sourceId: Long)
 
+    @Query("DELETE FROM photo WHERE sourceId IN (:sourceIds)")
+    fun delete(sourceIds: List<Long>)
+
     @Query("UPDATE photo SET tag = ${Constants.PHOTO_KEEP} WHERE sourceId = :sourceId")
     fun convertDeleteToKeep(sourceId: Long)
+
+    @Query("UPDATE photo SET tag = ${Constants.PHOTO_KEEP} WHERE sourceId in (:sourceIds)")
+    fun convertDeleteToKeep(sourceIds: List<Long>)
 }
