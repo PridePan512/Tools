@@ -67,7 +67,6 @@ object AlbumController {
             MediaStore.Images.Media.DATE_TAKEN,
             MediaStore.Images.Media.WIDTH,
             MediaStore.Images.Media.HEIGHT,
-            MediaStore.Images.Media.DATA,
             MediaStore.Images.Media.SIZE
         )
 

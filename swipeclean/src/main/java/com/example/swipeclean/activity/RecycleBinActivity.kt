@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.lib.photoview.PhotoViewFragment
+import com.example.lib.utils.AndroidUtils
 import com.example.lib.utils.PermissionUtils
 import com.example.lib.utils.StringUtils.getHumanFriendlyByteCount
 import com.example.swipeclean.adapter.RecyclerBinAdapter
@@ -49,8 +50,6 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
     private lateinit var mBackButton: MaterialButton
     private lateinit var mTitleTextView: TextView
     private lateinit var mLoadingView: LoadingIndicator
-
-    private var mDeletePhotos: List<Photo>? = null
     private var mAlbum: Album? = null
 
     private val newDeleteLauncher =
@@ -62,7 +61,7 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
                         mAdapter.getTotalSize(),
                         this@RecycleBinActivity
                     )
-                    mDeletePhotos?.let {
+                    mAdapter.photos.let {
                         AlbumController.cleanCompletedPhoto(it)
                         mAlbum?.photos?.removeAll(it)
                     }
@@ -83,7 +82,6 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
                 useOldDelete()
             }
         }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,10 +131,9 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
             finish()
             return
         }
-        mDeletePhotos = deletedPhotos
-        Collections.reverse(mDeletePhotos!!)
+        Collections.reverse(deletedPhotos)
         mAdapter = RecyclerBinAdapter(
-            mDeletePhotos!!.toMutableList(),
+            deletedPhotos.toMutableList(),
             { photo, position ->
                 mAdapter.notifyItemRemoved(position)
                 mAdapter.removePhoto(photo)
@@ -149,8 +146,17 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
                 if (mAdapter.photos.isEmpty()) {
                     finish()
                 }
-            }, { photo, position ->
-                PhotoViewFragment.show(this, position, mAdapter.photos.size)
+            }, { photoImageView, photo, position ->
+                val location = IntArray(2)
+                photoImageView.getLocationOnScreen(location)
+                PhotoViewFragment.show(
+                    this,
+                    position,
+                    mAdapter.photos.size,
+                    photo.sourceUri,
+                    photoImageView,
+                    AndroidUtils.getImageSizeFromUri(this, photo.sourceUri!!)!!
+                )
             }
         )
 
@@ -186,7 +192,7 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
                     IntentSenderRequest.Builder(
                         MediaStore.createDeleteRequest(
                             contentResolver,
-                            mDeletePhotos!!.map { it.sourceUri }).intentSender
+                            mAdapter.photos.map { it.sourceUri }).intentSender
                     ).build()
                 )
             }
@@ -251,7 +257,7 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
                 this@RecycleBinActivity
             )
 
-            mDeletePhotos?.let { deletePhotos ->
+            mAdapter.photos.let { deletePhotos ->
                 AlbumController.cleanCompletedPhoto(deletePhotos)
                 mAlbum?.photos?.removeAll(deletePhotos)
 

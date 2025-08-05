@@ -12,7 +12,7 @@ import com.example.tools.R
 class RecyclerBinAdapter(
     val photos: MutableList<Photo>,
     val onItemRestoreClick: (photo: Photo, position: Int) -> Unit,
-    val onItemClick: (photo: Photo, position: Int) -> Unit
+    val onItemClick: (photoImageView: ImageView, photo: Photo, position: Int) -> Unit
 ) : RecyclerView.Adapter<RecyclerBinAdapter.MyViewHolder>() {
 
     override fun onCreateViewHolder(
@@ -39,10 +39,10 @@ class RecyclerBinAdapter(
             .into(holder.photoImageView)
 
         holder.keepView.setOnClickListener {
-            onItemRestoreClick.invoke(photo, position)
+            onItemRestoreClick.invoke(photo, holder.bindingAdapterPosition)
         }
         holder.itemView.setOnClickListener {
-            onItemClick.invoke(photo, position)
+            onItemClick.invoke(holder.photoImageView, photo, holder.bindingAdapterPosition)
         }
     }
 
