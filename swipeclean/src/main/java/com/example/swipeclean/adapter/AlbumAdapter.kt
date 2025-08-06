@@ -45,10 +45,7 @@ class AlbumAdapter(
         holder: MyViewHolder,
         position: Int
     ) {
-        val context = holder.itemView.context
-        if (context == null) {
-            return
-        }
+        val context = holder.itemView.context ?: return
         val album = mAlbums[position]
         Glide
             .with(context)
@@ -69,7 +66,12 @@ class AlbumAdapter(
         if (album.isCompleted()) {
             holder.completedImageView.visibility = View.VISIBLE
             holder.completedView.visibility = View.VISIBLE
-            holder.dateTextView.setTextColor(ContextCompat.getColor(context, com.example.lib.R.color.text_sub))
+            holder.dateTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    com.example.lib.R.color.text_sub
+                )
+            )
             holder.dateTextView.paintFlags =
                 holder.dateTextView.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
             holder.itemView.setOnClickListener {
@@ -79,7 +81,12 @@ class AlbumAdapter(
         } else {
             holder.completedImageView.visibility = View.GONE
             holder.completedView.visibility = View.GONE
-            holder.dateTextView.setTextColor(ContextCompat.getColor(context, com.example.lib.R.color.text_main))
+            holder.dateTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    com.example.lib.R.color.text_main
+                )
+            )
             holder.dateTextView.paintFlags =
                 holder.dateTextView.paintFlags and (Paint.STRIKE_THRU_TEXT_FLAG.inv())
             holder.itemView.setOnClickListener {

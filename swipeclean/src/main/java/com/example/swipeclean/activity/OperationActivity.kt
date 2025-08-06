@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Intent
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -28,14 +27,11 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.lib.utils.AndroidUtils
 import com.example.swipeclean.business.AlbumController
 import com.example.swipeclean.model.Album
 import com.example.swipeclean.model.Photo
-import com.example.swipeclean.other.Constants.DOWN_IMAGE_SCALE
 import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
-import com.example.swipeclean.other.Constants.SHOW_TAG_TRANSLATE_X
 import com.example.tools.R
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +41,18 @@ import kotlin.math.abs
 import kotlin.math.max
 
 class OperationActivity : AppCompatActivity() {
+
+    companion object {
+        const val PHOTO_OPERATION_KEEP = 0
+        const val PHOTO_OPERATION_DELETE = 1
+        const val PHOTO_OPERATION_CANCEL = 2
+
+        const val AUTO_OPERATION_ANIMATOR_DURATION = 300L
+        const val MANUAL_OPERATION_ANIMATOR_DURATION = 200L
+
+        const val SHOW_TAG_TRANSLATE_X: Int = 200
+        const val DOWN_IMAGE_SCALE: Float = 0.9f
+    }
 
     private lateinit var mUpImageContainer: View
     private lateinit var mTrashButton: MaterialButton
@@ -64,14 +72,8 @@ class OperationActivity : AppCompatActivity() {
     private var mTouchY = -1f
     private var mIsAnimating = false
     private var mIsOperating = false
-    private var mScreenWidth = AndroidUtils.getScreenWidth()
+    private val mScreenWidth = AndroidUtils.getScreenWidth()
     private var mAlbum: Album? = null
-
-    private enum class OperationType {
-        Keep,
-        Delete,
-        Cancel
-    }
 
     private val mRecycleBinLauncher = registerForActivityResult(
         StartActivityForResult()
@@ -115,8 +117,7 @@ class OperationActivity : AppCompatActivity() {
         mMagnifyImageView = findViewById(R.id.iv_magnify_image)
 
         val params = mMagnifyImageView.layoutParams
-        params.width =
-            (mScreenWidth / 2 - Resources.getSystem().displayMetrics.density * 20).toInt()
+        params.width = mScreenWidth / 2 - AndroidUtils.dpToPx(20)
         mMagnifyImageView.layoutParams = params
 
         mDownImageView.scaleX = DOWN_IMAGE_SCALE
@@ -164,7 +165,6 @@ class OperationActivity : AppCompatActivity() {
             .load(photo.sourceUri)
             .priority(Priority.HIGH)
             .error(R.drawable.ic_vector_image)
-            .diskCacheStrategy(DiskCacheStrategy.ALL)
             .fitCenter()
             .into(image)
     }
@@ -232,6 +232,7 @@ class OperationActivity : AppCompatActivity() {
         val alphaAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ALPHA, 0f)
         val rotateAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ROTATION, 20f)
         val animatorSet = AnimatorSet()
+        animatorSet.duration = AUTO_OPERATION_ANIMATOR_DURATION
         animatorSet.playTogether(
             scaleXAnimator,
             scaleYAnimator,
@@ -242,8 +243,6 @@ class OperationActivity : AppCompatActivity() {
             downScaleXAnimator,
             downScaleYAnimator
         )
-        animatorSet.setDuration(300)
-
         animatorSet.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationStart(animation: Animator) {
                 super.onAnimationStart(animation)
@@ -255,7 +254,7 @@ class OperationActivity : AppCompatActivity() {
                 mKeepTextView.alpha = 0f
                 mDownImageView.scaleX = DOWN_IMAGE_SCALE
                 mDownImageView.scaleY = DOWN_IMAGE_SCALE
-                doOnCompleted(OperationType.Keep)
+                doOnCompleted(PHOTO_OPERATION_KEEP)
                 mIsAnimating = false
             }
 
@@ -293,6 +292,7 @@ class OperationActivity : AppCompatActivity() {
         val alphaAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ALPHA, 0f)
         val rotateAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ROTATION, -20f)
         val animatorSet = AnimatorSet()
+        animatorSet.duration = AUTO_OPERATION_ANIMATOR_DURATION
         animatorSet.playTogether(
             scaleXAnimator,
             scaleYAnimator,
@@ -303,8 +303,6 @@ class OperationActivity : AppCompatActivity() {
             downScaleXAnimator,
             downScaleYAnimator
         )
-        animatorSet.setDuration(300)
-
         animatorSet.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationStart(animation: Animator) {
                 super.onAnimationStart(animation)
@@ -316,7 +314,7 @@ class OperationActivity : AppCompatActivity() {
                 mDeleteTextView.alpha = 0f
                 mDownImageView.scaleX = DOWN_IMAGE_SCALE
                 mDownImageView.scaleY = DOWN_IMAGE_SCALE
-                doOnCompleted(OperationType.Delete)
+                doOnCompleted(PHOTO_OPERATION_DELETE)
                 mIsAnimating = false
             }
 
@@ -386,6 +384,7 @@ class OperationActivity : AppCompatActivity() {
             0f
         )
         val animatorSet = AnimatorSet()
+        animatorSet.duration = AUTO_OPERATION_ANIMATOR_DURATION
         animatorSet.playTogether(
             translateXAnimator,
             alphaAnimator,
@@ -395,7 +394,6 @@ class OperationActivity : AppCompatActivity() {
             scaleXAnimator,
             scaleYAnimator
         )
-        animatorSet.setDuration(300)
         animatorSet.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationStart(animation: Animator) {
                 super.onAnimationStart(animation)
@@ -404,7 +402,7 @@ class OperationActivity : AppCompatActivity() {
 
             override fun onAnimationEnd(animation: Animator) {
                 super.onAnimationEnd(animation)
-                doOnCompleted(OperationType.Cancel)
+                doOnCompleted(PHOTO_OPERATION_CANCEL)
                 mIsAnimating = false
             }
 
@@ -416,11 +414,11 @@ class OperationActivity : AppCompatActivity() {
         animatorSet.start()
     }
 
-    private fun doOnCompleted(operationType: OperationType) {
+    private fun doOnCompleted(operationType: Int) {
         var photo: Photo? = null
         mAlbum?.apply {
             photo =
-                if (operationType == OperationType.Cancel) photos[getOperatedIndex() - 1] else photos[getOperatedIndex()]
+                if (operationType == PHOTO_OPERATION_CANCEL) photos[getOperatedIndex() - 1] else photos[getOperatedIndex()]
         }
 
         if (photo == null) {
@@ -428,7 +426,7 @@ class OperationActivity : AppCompatActivity() {
         }
 
         when (operationType) {
-            OperationType.Cancel -> {
+            PHOTO_OPERATION_CANCEL -> {
                 photo.cancelOperated()
                 lifecycleScope.launch(Dispatchers.IO) {
                     AlbumController.cleanCompletedPhoto(photo)
@@ -436,14 +434,14 @@ class OperationActivity : AppCompatActivity() {
                 refreshTrashButton()
             }
 
-            OperationType.Keep -> {
+            PHOTO_OPERATION_KEEP -> {
                 photo.doKeep()
                 lifecycleScope.launch(Dispatchers.IO) {
                     AlbumController.addPhoto(photo)
                 }
             }
 
-            OperationType.Delete -> {
+            PHOTO_OPERATION_DELETE -> {
                 photo.doDelete()
                 lifecycleScope.launch(Dispatchers.IO) {
                     AlbumController.addPhoto(photo)
@@ -452,7 +450,7 @@ class OperationActivity : AppCompatActivity() {
             }
         }
 
-        if (operationType == OperationType.Cancel) {
+        if (operationType == PHOTO_OPERATION_CANCEL) {
             refreshTitle()
             return
         }
@@ -484,7 +482,7 @@ class OperationActivity : AppCompatActivity() {
                     bitmap,
                     rateX,
                     rateY,
-                    (50 * Resources.getSystem().displayMetrics.density).toInt()
+                    AndroidUtils.dpToPx(50)
                 )
             )
         }
@@ -500,10 +498,8 @@ class OperationActivity : AppCompatActivity() {
             return null
         }
 
-        val bitmapWidth = originalBitmap.width
-        val bitmapHeight = originalBitmap.height
-        val centerX = rateX * bitmapWidth
-        val centerY = rateY * bitmapHeight
+        val centerX = rateX * originalBitmap.width
+        val centerY = rateY * originalBitmap.height
 
         val outputBitmap = createBitmap(size, size)
 
@@ -675,14 +671,13 @@ class OperationActivity : AppCompatActivity() {
                 )
                 val alphaAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ALPHA, 0f)
                 val animatorSet = AnimatorSet()
+                animatorSet.duration = MANUAL_OPERATION_ANIMATOR_DURATION
                 animatorSet.playTogether(
                     translateXAnimator,
                     alphaAnimator,
                     scaleXAnimator,
                     scaleYAnimator
                 )
-                animatorSet.setDuration(200)
-
                 animatorSet.addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationStart(animation: Animator) {
                         super.onAnimationStart(animation)
@@ -693,7 +688,7 @@ class OperationActivity : AppCompatActivity() {
                         super.onAnimationEnd(animation)
                         mDownImageView.scaleX = DOWN_IMAGE_SCALE
                         mDownImageView.scaleY = DOWN_IMAGE_SCALE
-                        doOnCompleted(if (isRightSwipe) OperationType.Keep else OperationType.Delete)
+                        doOnCompleted(if (isRightSwipe) PHOTO_OPERATION_KEEP else PHOTO_OPERATION_DELETE)
                         mIsAnimating = false
                     }
 
@@ -715,6 +710,7 @@ class OperationActivity : AppCompatActivity() {
                     ObjectAnimator.ofFloat(mUpImageContainer, View.TRANSLATION_Y, 0f)
                 val rotationAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ROTATION, 0f)
                 val animatorSet = AnimatorSet()
+                animatorSet.duration = MANUAL_OPERATION_ANIMATOR_DURATION
                 animatorSet.playTogether(
                     translateXAnimator,
                     translateYAnimator,
@@ -722,7 +718,6 @@ class OperationActivity : AppCompatActivity() {
                     keepAlphaAnimator,
                     deleteAlphaAnimator
                 )
-                animatorSet.setDuration(200)
                 animatorSet.addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationStart(animation: Animator) {
                         super.onAnimationStart(animation)
@@ -754,12 +749,12 @@ class OperationActivity : AppCompatActivity() {
             val keepImageViewScaleYAnimator =
                 ObjectAnimator.ofFloat(mKeepImageView, View.SCALE_Y, 1f)
             val animatorSet = AnimatorSet()
+            animatorSet.duration = MANUAL_OPERATION_ANIMATOR_DURATION
             animatorSet.playTogether(
                 deleteImageViewAlphaAnimator, deleteImageViewScaleXAnimator,
                 deleteImageViewScaleYAnimator, keepImageViewAlphaAnimator,
                 keepImageViewScaleXAnimator, keepImageViewScaleYAnimator
             )
-            animatorSet.setDuration(200)
             animatorSet.addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationStart(animation: Animator) {
                     super.onAnimationStart(animation)

@@ -30,10 +30,9 @@ class RecyclerBinAdapter(
         position: Int
     ) {
         val photo = photos[position]
-        val context = holder.itemView.context
 
         Glide
-            .with(context)
+            .with(holder.itemView.context)
             .load(photo.sourceUri)
             .placeholder(R.drawable.ic_vector_image)
             .into(holder.photoImageView)
@@ -57,7 +56,6 @@ class RecyclerBinAdapter(
     fun getTotalSize(): Long {
         return photos.sumOf { item -> item.size }
     }
-
 
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val photoImageView: ImageView = itemView.findViewById(R.id.iv_photo)

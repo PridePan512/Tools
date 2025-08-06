@@ -4,7 +4,9 @@ import android.net.Uri
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
-import com.example.swipeclean.other.Constants
+import com.example.swipeclean.other.Constants.PHOTO_DELETE
+import com.example.swipeclean.other.Constants.PHOTO_KEEP
+import com.example.swipeclean.other.Constants.PHOTO_NOT_OPERATION
 
 @Entity(tableName = "photo")
 data class Photo(
@@ -12,7 +14,7 @@ data class Photo(
     val size: Long,
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    var tag: Int = Constants.PHOTO_NOT_OPERATION
+    var tag: Int = PHOTO_NOT_OPERATION
 ) {
     @Ignore
     var displayName: String = ""
@@ -29,22 +31,22 @@ data class Photo(
     @Ignore
     var height: Int = 0
 
-    fun isOperated(): Boolean = tag != Constants.PHOTO_NOT_OPERATION
+    fun isOperated(): Boolean = tag != PHOTO_NOT_OPERATION
 
-    fun isDelete(): Boolean = tag == Constants.PHOTO_DELETE
+    fun isDelete(): Boolean = tag == PHOTO_DELETE
 
-    fun isKeep(): Boolean = tag == Constants.PHOTO_KEEP
+    fun isKeep(): Boolean = tag == PHOTO_KEEP
 
     fun cancelOperated() {
-        tag = Constants.PHOTO_NOT_OPERATION
+        tag = PHOTO_NOT_OPERATION
     }
 
     fun doDelete() {
-        tag = Constants.PHOTO_DELETE
+        tag = PHOTO_DELETE
     }
 
     fun doKeep() {
-        tag = Constants.PHOTO_KEEP
+        tag = PHOTO_KEEP
     }
 
     fun clone(photo: Photo): Photo {

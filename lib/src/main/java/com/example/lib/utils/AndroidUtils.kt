@@ -18,13 +18,16 @@ object AndroidUtils {
         return Resources.getSystem().displayMetrics.heightPixels
     }
 
+    fun dpToPx(dp: Int): Int {
+        return (Resources.getSystem().displayMetrics.density * dp).toInt()
+    }
+
     //获取imageview的真实显示区域
     fun getVisibleImageRect(imageView: ImageView): RectF? {
         val drawable = imageView.drawable ?: return null
-        val matrix = imageView.imageMatrix
         val drawableRect =
             RectF(0f, 0f, drawable.intrinsicWidth.toFloat(), drawable.intrinsicHeight.toFloat())
-        matrix.mapRect(drawableRect) // 映射 drawable 到 imageView 的坐标系
+        imageView.imageMatrix.mapRect(drawableRect) // 映射 drawable 到 imageView 的坐标系
         return drawableRect
     }
 

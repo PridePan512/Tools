@@ -147,16 +147,16 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
                     finish()
                 }
             }, { photoImageView, photo, position ->
-                val location = IntArray(2)
-                photoImageView.getLocationOnScreen(location)
-                PhotoViewFragment.show(
-                    this,
-                    position,
-                    mAdapter.photos.size,
-                    photo.sourceUri,
-                    photoImageView,
-                    AndroidUtils.getImageSizeFromUri(this, photo.sourceUri!!)!!
-                )
+                photo.sourceUri?.let {
+                    PhotoViewFragment.show(
+                        this,
+                        position,
+                        mAdapter.photos.size,
+                        it,
+                        photoImageView,
+                        AndroidUtils.getImageSizeFromUri(this, it)!!
+                    )
+                }
             }
         )
 
