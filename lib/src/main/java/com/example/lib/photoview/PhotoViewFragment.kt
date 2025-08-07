@@ -8,6 +8,7 @@ import android.animation.RectEvaluator
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -25,46 +26,36 @@ import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.example.lib.R
 import com.example.lib.utils.AndroidUtils
 import java.util.Locale
 import kotlin.math.min
 
 // TODO: 这个页面可以增加一个恢复按钮
+/*
+需要原图centerCrop，大图fitCenter
+ */
 class PhotoViewFragment() : Fragment() {
     companion object {
+        const val TAG_FRAGMENT = "tag_fragment"
         const val TAG_SIZE = "tag_size"
         const val TAG_INDEX = "tag_index"
-        const val TAG_ENABLE_TRANSITION = "tag_enable_transition"
         const val TAG_LOCATION_X = "tag_location_x"
         const val TAG_LOCATION_Y = "tag_location_y"
         const val TAG_LOCATION_WIDTH = "tag_location_width"
         const val TAG_LOCATION_HEIGHT = "tag_location_height"
-        const val TAG_SOURCE_WIDTH = "tag_source_width"
-        const val TAG_SOURCE_HEIGHT = "tag_source_height"
         const val TAG_URI = "tag_uri"
-        fun show(
-            activity: FragmentActivity,
-            index: Int,
-            size: Int
-        ) {
-            val fragment = PhotoViewFragment()
-            val bundle = Bundle()
-            bundle.putInt(TAG_INDEX, index)
-            bundle.putInt(TAG_SIZE, size)
-            fragment.arguments = bundle
-
-            activity.supportFragmentManager.beginTransaction().add(android.R.id.content, fragment)
-                .show(fragment).commitNowAllowingStateLoss()
-        }
 
         fun show(
             activity: FragmentActivity,
             index: Int,
             size: Int,
-            uri: Uri?,
-            imageView: ImageView,
-            pair: Pair<Int, Int>
+            uri: Uri,
+            imageView: ImageView
         ) {
             val fragment = PhotoViewFragment()
             val location = IntArray(2)
@@ -72,37 +63,30 @@ class PhotoViewFragment() : Fragment() {
             val bundle = Bundle()
             bundle.putInt(TAG_INDEX, index)
             bundle.putInt(TAG_SIZE, size)
-            bundle.putBoolean(TAG_ENABLE_TRANSITION, true)
             bundle.putInt(TAG_LOCATION_X, location[0])
             bundle.putInt(TAG_LOCATION_Y, location[1])
             bundle.putInt(TAG_LOCATION_WIDTH, imageView.width)
             bundle.putInt(TAG_LOCATION_HEIGHT, imageView.height)
-            bundle.putInt(TAG_SOURCE_WIDTH, pair.first)
-            bundle.putInt(TAG_SOURCE_HEIGHT, pair.second)
             bundle.putParcelable(TAG_URI, uri)
             fragment.arguments = bundle
 
-            activity.supportFragmentManager.beginTransaction().add(android.R.id.content, fragment)
+            activity.supportFragmentManager.beginTransaction()
+                .add(android.R.id.content, fragment, TAG_FRAGMENT)
                 .show(fragment).commitNowAllowingStateLoss()
         }
     }
 
     interface Listener {
         fun showPhoto(imageView: ImageView, index: Int)
+        fun scrollToPosition(position: Int)
     }
 
-    private var mListener: Listener? = null
+    private lateinit var mListener: Listener
     private lateinit var mViewpager: ViewPager2
     private lateinit var mTitleBar: View
     private lateinit var mMainView: View
+    private lateinit var mTranslationImageView: ImageView
     private var mIsAnimating = false
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-//        val enterAnimator = Fade()
-//        enterAnimator.duration = 2000
-//        enterTransition = enterAnimator
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -129,10 +113,13 @@ class PhotoViewFragment() : Fragment() {
         super.onAttach(context)
         if (context is Listener) {
             mListener = context
+
+        } else {
+            throw RuntimeException("You must implement PhotoViewFragment's Listener")
         }
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                close()
+                doExit()
             }
         })
     }
@@ -143,19 +130,37 @@ class PhotoViewFragment() : Fragment() {
         mTitleBar = view.findViewById(R.id.v_title_bar)
         mMainView = view.findViewById(R.id.main)
         mViewpager = view.findViewById(R.id.v_viewpager)
+        mTranslationImageView = view.findViewById(R.id.iv_transition)
+
         val countTextView: TextView = view.findViewById(R.id.tv_count)
-        val translationImageView: ImageView = view.findViewById(R.id.iv_transition)
         val size = arguments.getInt(TAG_SIZE)
         val index = arguments.getInt(TAG_INDEX)
-        val enableTransition = arguments.getBoolean(TAG_ENABLE_TRANSITION)
-        if (enableTransition) {
-            translationImageView.visibility = View.VISIBLE
-            mViewpager.visibility = View.INVISIBLE
-            doEnterAnimator(arguments, translationImageView)
+        val uri = arguments.getParcelable<Uri>(TAG_URI)
+        val (sourceWidth, sourceHeight) = AndroidUtils.getImageSizeFromUri(view.context, uri!!)
+            ?: (0 to 0)
+
+        if (sourceWidth == 0 || sourceHeight == 0) {
+            mTranslationImageView.visibility = View.GONE
+            mViewpager.visibility = View.VISIBLE
 
         } else {
-            translationImageView.visibility = View.GONE
-            mViewpager.visibility = View.VISIBLE
+            mTranslationImageView.visibility = View.VISIBLE
+            mViewpager.visibility = View.INVISIBLE
+
+            val locationX = arguments.getInt(TAG_LOCATION_X)
+            val locationY = arguments.getInt(TAG_LOCATION_Y)
+            val originWidth = arguments.getInt(TAG_LOCATION_WIDTH)
+            val originHeight = arguments.getInt(TAG_LOCATION_HEIGHT)
+
+            doEnterAnimator(
+                locationX,
+                locationY,
+                originWidth,
+                originHeight,
+                sourceWidth,
+                sourceHeight,
+                uri
+            )
         }
 
         mViewpager.offscreenPageLimit = 1
@@ -173,7 +178,7 @@ class PhotoViewFragment() : Fragment() {
                 holder: MyViewHolder,
                 position: Int
             ) {
-                mListener?.showPhoto(holder.photoView, position)
+                mListener.showPhoto(holder.photoView, position)
                 holder.photoView.setOnClickListener {
                     doBackgroundChangeAnimator()
                 }
@@ -209,8 +214,12 @@ class PhotoViewFragment() : Fragment() {
         }
 
         view.findViewById<Button>(R.id.btn_back).setOnClickListener {
-            close()
+            doExit()
         }
+    }
+
+    private fun doExit() {
+        mListener.scrollToPosition(mViewpager.currentItem)
     }
 
     private fun close() {
@@ -218,6 +227,37 @@ class PhotoViewFragment() : Fragment() {
             .beginTransaction()
             .remove(this@PhotoViewFragment)
             .commit()
+    }
+
+    fun doPreClose(
+        uri: Uri?,
+        imageView: ImageView
+    ) {
+        val (sourceWidth, sourceHeight) = if (uri == null) {
+            close()
+            return
+        } else {
+            AndroidUtils.getImageSizeFromUri(imageView.context, uri) ?: (0 to 0)
+        }
+
+        if (sourceWidth == 0 || sourceHeight == 0) {
+            close()
+            return
+        }
+
+        val location = IntArray(2).apply {
+            imageView.getLocationOnScreen(this)
+        }
+
+        doExitAnimator(
+            location[0],
+            location[1],
+            imageView.width,
+            imageView.height,
+            sourceWidth,
+            sourceHeight,
+            uri
+        )
     }
 
     private fun doBackgroundChangeAnimator() {
@@ -303,53 +343,53 @@ class PhotoViewFragment() : Fragment() {
         animatorSet.start()
     }
 
-    private fun doEnterAnimator(arguments: Bundle, translationImageView: ImageView) {
-        val locationX = arguments.getInt(TAG_LOCATION_X)
-        val locationY = arguments.getInt(TAG_LOCATION_Y)
-        val originWidth = arguments.getInt(TAG_LOCATION_WIDTH)
-        val originHeight = arguments.getInt(TAG_LOCATION_HEIGHT)
-        val sourceWidth = arguments.getInt(TAG_SOURCE_WIDTH)
-        val sourceHeight = arguments.getInt(TAG_SOURCE_HEIGHT)
-        val uri = arguments.getParcelable<Uri>(TAG_URI)
-
+    private fun doEnterAnimator(
+        locationX: Int,
+        locationY: Int,
+        originWidth: Int,
+        originHeight: Int,
+        sourceWidth: Int,
+        sourceHeight: Int,
+        uri: Uri
+    ) {
         //获取centerCrop的放缩倍数
-        val scale = maxOf(
+        val centerCropScale = maxOf(
             originWidth / sourceWidth.toFloat(),
             originHeight / sourceHeight.toFloat()
         )
 
-        //获取transitionImageView的宽高
-        val transitionWidth = (sourceWidth * scale).toInt()
-        val translationHeight = (sourceHeight * scale).toInt()
+        //获取centerCrop下全部显示时的宽高
+        val centerCropWidth = (sourceWidth * centerCropScale).toInt()
+        val centerCropHeight = (sourceHeight * centerCropScale).toInt()
         Glide
-            .with(translationImageView.context)
+            .with(mTranslationImageView.context)
             .load(uri)
-            .override(transitionWidth, translationHeight)
-            .into(translationImageView)
+            .override(centerCropWidth, centerCropHeight)
+            .into(mTranslationImageView)
 
         //获取中心点
         val centerX = locationX + originWidth / 2f
         val centerY = locationY + originHeight / 2f
 
         //使transitionImageView对齐原始imageView中心点
-        translationImageView.x = centerX - transitionWidth / 2f
-        translationImageView.y = centerY - translationHeight / 2f
+        mTranslationImageView.x = centerX - centerCropWidth / 2f
+        mTranslationImageView.y = centerY - centerCropHeight / 2f
 
         //获取transitionImageView全屏显示时需要放大的倍数
         val animatorScale = min(
-            AndroidUtils.getScreenWidth() / transitionWidth.toFloat(),
-            AndroidUtils.getScreenHeight() / translationHeight.toFloat()
+            AndroidUtils.getScreenWidth() / centerCropWidth.toFloat(),
+            AndroidUtils.getScreenHeight() / centerCropHeight.toFloat()
         )
 
         val animatorSet = AnimatorSet()
         animatorSet.duration = 300
         val scaleXAnimator = ObjectAnimator.ofFloat(
-            translationImageView,
+            mTranslationImageView,
             View.SCALE_X,
             animatorScale
         )
         val scaleYAnimator = ObjectAnimator.ofFloat(
-            translationImageView,
+            mTranslationImageView,
             View.SCALE_Y,
             animatorScale
         )
@@ -360,28 +400,28 @@ class PhotoViewFragment() : Fragment() {
             Color.BLACK
         )
         val clipBoundAnimator = ObjectAnimator.ofObject(
-            translationImageView,
+            mTranslationImageView,
             "clipBounds",
             RectEvaluator(),
             Rect(
-                (transitionWidth - originWidth) / 2,
-                (translationHeight - originHeight) / 2,
-                (transitionWidth + originWidth) / 2,
-                (translationHeight + originHeight) / 2
+                (centerCropWidth - originWidth) / 2,
+                (centerCropHeight - originHeight) / 2,
+                (centerCropWidth + originWidth) / 2,
+                (centerCropHeight + originHeight) / 2
             ),
-            Rect(0, 0, transitionWidth, translationHeight)
+            Rect(0, 0, centerCropWidth, centerCropHeight)
         )
         val translateXAnimator = ObjectAnimator.ofFloat(
-            translationImageView,
+            mTranslationImageView,
             View.TRANSLATION_X,
-            translationImageView.translationX,
-            translationImageView.translationX + AndroidUtils.getScreenWidth() / 2f - centerX
+            mTranslationImageView.translationX,
+            mTranslationImageView.translationX + AndroidUtils.getScreenWidth() / 2f - centerX
         )
         val translateYAnimator = ObjectAnimator.ofFloat(
-            translationImageView,
+            mTranslationImageView,
             View.TRANSLATION_Y,
-            translationImageView.translationY,
-            translationImageView.translationY + AndroidUtils.getScreenHeight() / 2f - centerY
+            mTranslationImageView.translationY,
+            mTranslationImageView.translationY + AndroidUtils.getScreenHeight() / 2f - centerY
         )
         animatorSet.playTogether(
             scaleXAnimator,
@@ -399,7 +439,140 @@ class PhotoViewFragment() : Fragment() {
             override fun onAnimationEnd(animation: Animator) {
                 super.onAnimationEnd(animation)
                 mViewpager.visibility = View.VISIBLE
-                translationImageView.visibility = View.GONE
+                mTranslationImageView.visibility = View.INVISIBLE
+
+                //重置mTranslationImageView的状态
+                mTranslationImageView.scaleX = 1f
+                mTranslationImageView.scaleY = 1f
+                mTranslationImageView.translationX = 0f
+                mTranslationImageView.translationY = 0f
+            }
+        })
+        animatorSet.start()
+    }
+
+    private fun doExitAnimator(
+        locationX: Int,
+        locationY: Int,
+        originWidth: Int,
+        originHeight: Int,
+        sourceWidth: Int,
+        sourceHeight: Int,
+        uri: Uri
+    ) {
+        //获取centerCrop的放缩倍数
+        val scale = maxOf(
+            originWidth / sourceWidth.toFloat(),
+            originHeight / sourceHeight.toFloat()
+        )
+
+        //获取centerCrop下全部显示时的宽高
+        val centerCropWidth = (sourceWidth * scale).toInt()
+        val centerCropHeight = (sourceHeight * scale).toInt()
+
+        mTranslationImageView.visibility = View.VISIBLE
+        Glide
+            .with(mTranslationImageView.context)
+            .load(uri)
+            .override(centerCropWidth, centerCropHeight)
+            .addListener(object : RequestListener<Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<Drawable?>?,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: Drawable?,
+                    model: Any?,
+                    target: Target<Drawable?>?,
+                    dataSource: DataSource?,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    mViewpager.visibility = View.INVISIBLE
+                    return false
+                }
+
+            })
+            .into(mTranslationImageView)
+
+        //获取中心点
+        val centerX = locationX + originWidth / 2f
+        val centerY = locationY + originHeight / 2f
+
+        //使transitionImageView移动到中间
+        mTranslationImageView.x = (AndroidUtils.getScreenWidth() - centerCropWidth) / 2f
+        mTranslationImageView.y = (AndroidUtils.getScreenHeight() - centerCropHeight) / 2f
+
+        //获取transitionImageView全屏显示时需要放大的倍数
+        val animatorScale = min(
+            AndroidUtils.getScreenWidth() / centerCropWidth.toFloat(),
+            AndroidUtils.getScreenHeight() / centerCropHeight.toFloat()
+        )
+
+        val animatorSet = AnimatorSet()
+        animatorSet.duration = 300
+        val scaleXAnimator = ObjectAnimator.ofFloat(
+            mTranslationImageView,
+            View.SCALE_X,
+            animatorScale,
+            1f
+        )
+        val scaleYAnimator = ObjectAnimator.ofFloat(
+            mTranslationImageView,
+            View.SCALE_Y,
+            animatorScale,
+            1f
+        )
+        val backgroundAnimator = ObjectAnimator.ofArgb(
+            mMainView,
+            "backgroundColor",
+            Color.BLACK,
+            Color.TRANSPARENT
+        )
+        val clipBoundAnimator = ObjectAnimator.ofObject(
+            mTranslationImageView,
+            "clipBounds",
+            RectEvaluator(),
+            Rect(0, 0, centerCropWidth, centerCropHeight),
+            Rect(
+                (centerCropWidth - originWidth) / 2,
+                (centerCropHeight - originHeight) / 2,
+                (centerCropWidth + originWidth) / 2,
+                (centerCropHeight + originHeight) / 2
+            )
+        )
+        val translateXAnimator = ObjectAnimator.ofFloat(
+            mTranslationImageView,
+            View.TRANSLATION_X,
+            mTranslationImageView.translationX,
+            mTranslationImageView.translationX + centerX - AndroidUtils.getScreenWidth() / 2f
+        )
+        val translateYAnimator = ObjectAnimator.ofFloat(
+            mTranslationImageView,
+            View.TRANSLATION_Y,
+            mTranslationImageView.translationY,
+            mTranslationImageView.translationY + centerY - AndroidUtils.getScreenHeight() / 2f
+        )
+        animatorSet.playTogether(
+            scaleXAnimator,
+            scaleYAnimator,
+            translateXAnimator,
+            translateYAnimator,
+            backgroundAnimator,
+            clipBoundAnimator
+        )
+        animatorSet.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationStart(animation: Animator) {
+                super.onAnimationStart(animation)
+            }
+
+            override fun onAnimationEnd(animation: Animator) {
+                super.onAnimationEnd(animation)
+                close()
             }
         })
         animatorSet.start()

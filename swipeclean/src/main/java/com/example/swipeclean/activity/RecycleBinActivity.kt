@@ -22,7 +22,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.lib.photoview.PhotoViewFragment
-import com.example.lib.utils.AndroidUtils
 import com.example.lib.utils.PermissionUtils
 import com.example.lib.utils.StringUtils.getHumanFriendlyByteCount
 import com.example.swipeclean.adapter.RecyclerBinAdapter
@@ -115,6 +114,20 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
             .into(imageView)
     }
 
+    override fun scrollToPosition(position: Int) {
+        mRecyclerView.scrollToPosition(position)
+        mRecyclerView.post {
+            val holder = mRecyclerView.findViewHolderForAdapterPosition(position)
+            if (holder is RecyclerBinAdapter.MyViewHolder) {
+                val fragment =
+                    supportFragmentManager.findFragmentByTag(PhotoViewFragment.TAG_FRAGMENT)
+                if (fragment is PhotoViewFragment) {
+                    fragment.doPreClose(mAdapter.photos[position].sourceUri, holder.photoImageView)
+                }
+            }
+        }
+    }
+
     private fun initView() {
         mRecyclerView = findViewById(R.id.v_recyclerview)
         mEmptyTrashButton = findViewById(R.id.btn_empty_trash)
@@ -153,8 +166,7 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
                         position,
                         mAdapter.photos.size,
                         it,
-                        photoImageView,
-                        AndroidUtils.getImageSizeFromUri(this, it)!!
+                        photoImageView
                     )
                 }
             }
