@@ -530,7 +530,7 @@ class PhotoViewFragment() : Fragment() {
         val backgroundAnimator = ObjectAnimator.ofArgb(
             mMainView,
             "backgroundColor",
-            Color.BLACK,
+            if (mTitleBar.isVisible) Color.WHITE else Color.BLACK,
             Color.TRANSPARENT
         )
         val clipBoundAnimator = ObjectAnimator.ofObject(
