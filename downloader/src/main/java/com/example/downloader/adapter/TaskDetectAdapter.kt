@@ -166,8 +166,7 @@ class TaskDetectAdapter() :
 
             try {
                 dateTextView.text = StringUtils.formatDate(
-                    videoInfo.uploadDate.toString(),
-                    Locale.getDefault()
+                    videoInfo.uploadDate.toString()
                 )
             } catch (_: Exception) {
                 dateTextView.visibility = View.GONE
