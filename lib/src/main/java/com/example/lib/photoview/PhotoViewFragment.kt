@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
@@ -23,6 +24,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
@@ -49,6 +51,8 @@ class PhotoViewFragment() : Fragment() {
         const val TAG_LOCATION_WIDTH = "tag_location_width"
         const val TAG_LOCATION_HEIGHT = "tag_location_height"
         const val TAG_URI = "tag_uri"
+
+        const val ANIMATOR_DURATION = 300L
 
         fun show(
             activity: FragmentActivity,
@@ -382,7 +386,8 @@ class PhotoViewFragment() : Fragment() {
         )
 
         val animatorSet = AnimatorSet()
-        animatorSet.duration = 300
+        animatorSet.duration = ANIMATOR_DURATION
+        animatorSet.interpolator = FastOutSlowInInterpolator()
         val scaleXAnimator = ObjectAnimator.ofFloat(
             mTranslationImageView,
             View.SCALE_X,
@@ -514,7 +519,8 @@ class PhotoViewFragment() : Fragment() {
         )
 
         val animatorSet = AnimatorSet()
-        animatorSet.duration = 300
+        animatorSet.duration = ANIMATOR_DURATION
+        animatorSet.interpolator = DecelerateInterpolator()
         val scaleXAnimator = ObjectAnimator.ofFloat(
             mTranslationImageView,
             View.SCALE_X,
