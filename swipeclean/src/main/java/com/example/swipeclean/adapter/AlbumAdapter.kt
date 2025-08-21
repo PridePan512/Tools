@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.swipeclean.adapter.AlbumAdapter.MyViewHolder
@@ -17,19 +16,9 @@ import com.example.tools.R
 import java.util.Locale
 
 class AlbumAdapter(
+    val albums: ArrayList<Album>,
     val onItemClick: (albumId: Long, albumFormatDate: String, completed: Boolean) -> Unit
 ) : RecyclerView.Adapter<MyViewHolder>() {
-
-    private val mAlbums = ArrayList<Album>()
-
-    fun setData(albums: List<Album>) {
-        val newAlbums = albums.map { it.clone(it) }
-        val callback = MyDiffCallback(mAlbums, newAlbums)
-        val diffResult = DiffUtil.calculateDiff(callback)
-        mAlbums.clear()
-        mAlbums.addAll(newAlbums)
-        diffResult.dispatchUpdatesTo(this)
-    }
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -46,7 +35,7 @@ class AlbumAdapter(
         position: Int
     ) {
         val context = holder.itemView.context ?: return
-        val album = mAlbums[position]
+        val album = albums[position]
         Glide
             .with(context)
             .load(album.getCoverUri())
@@ -96,11 +85,11 @@ class AlbumAdapter(
     }
 
     override fun getItemCount(): Int {
-        return mAlbums.size
+        return albums.size
     }
 
     override fun getItemId(position: Int): Long {
-        return mAlbums[position].getId()
+        return albums[position].getId()
     }
 
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -110,36 +99,5 @@ class AlbumAdapter(
         val progressIndicator: DualProgressIndicator = itemView.findViewById(R.id.lp_progress)
         val completedImageView: ImageView = itemView.findViewById(R.id.iv_completed)
         val completedView: View = itemView.findViewById(R.id.v_completed)
-    }
-
-    class MyDiffCallback(val oldList: List<Album>, val newList: List<Album>) : DiffUtil.Callback() {
-
-        override fun getOldListSize(): Int {
-            return oldList.size
-        }
-
-        override fun getNewListSize(): Int {
-            return newList.size
-        }
-
-        override fun areItemsTheSame(
-            oldItemPosition: Int,
-            newItemPosition: Int
-        ): Boolean {
-            return newList[newItemPosition].getId() == oldList[oldItemPosition].getId()
-        }
-
-        override fun areContentsTheSame(
-            oldItemPosition: Int,
-            newItemPosition: Int
-        ): Boolean {
-            val newAlbum = newList[newItemPosition]
-            val oldAlbum = oldList[oldItemPosition]
-
-            return newAlbum.getTotalCount() == oldAlbum.getTotalCount() &&
-                    newAlbum.getCompletedCount() == oldAlbum.getCompletedCount() &&
-                    newAlbum.getOperatedIndex() == oldAlbum.getOperatedIndex()
-        }
-
     }
 }

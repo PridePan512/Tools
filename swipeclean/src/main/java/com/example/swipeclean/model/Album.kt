@@ -26,10 +26,5 @@ data class Album(
     fun isCompleted(): Boolean = getTotalCount() == getCompletedCount()
 
     fun isOperated(): Boolean = getTotalCount() == getOperatedIndex()
-
-    fun clone(album: Album): Album {
-        val clonedPhotos = album.photos.map { it.clone(it) }.toMutableList()
-        return Album(clonedPhotos, album.formatData)
-    }
 }
 

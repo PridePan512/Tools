@@ -8,6 +8,8 @@ import android.view.View
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.component1
+import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -43,9 +45,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mSortButton: MaterialButton
     private lateinit var mAdapter: AlbumAdapter
     private lateinit var mLoadingView: View
-    private val launcher: ActivityResultLauncher<String> =
+    private val mPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            prepareData()
+            initData()
+        }
+
+    private val mOperationLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { (resultCode, data) ->
+            if (resultCode == RESULT_OK) {
+                val albumId = data?.getLongExtra(KEY_INTENT_ALBUM_ID, 0L)
+                val index = mAdapter.albums.indexOfFirst { it.getId() == albumId }
+                if (index != -1) {
+                    mAdapter.notifyItemChanged(index)
+                }
+            }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,16 +80,17 @@ class MainActivity : AppCompatActivity() {
         initView()
     }
 
-    override fun onStart() {
-        super.onStart()
-        prepareData()
-    }
-
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         if (mLoadingView.isVisible) {
             return true
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    fun onChangeSort() {
+        sortAlbums(mAdapter.albums)
+        mAdapter.notifyDataSetChanged()
+        mRecyclerView.scrollToPosition(0)
     }
 
     private fun initView() {
@@ -89,67 +103,26 @@ class MainActivity : AppCompatActivity() {
         mAlbumsView = findViewById(R.id.v_albums)
         mLoadingView = findViewById(R.id.v_loading)
 
-        mAdapter = AlbumAdapter { albumId, albumFormatDate, completed ->
-            if (completed) {
-                MaterialAlertDialogBuilder(this@MainActivity)
-                    .setTitle(albumFormatDate)
-                    .setMessage("要再次清理此文件夹中的图片吗")
-                    .setCancelable(false)
-                    .setNegativeButton("取消") { dialog, which -> }
-                    .setPositiveButton("确认") { dialog, which ->
-                        val album: Album? =
-                            AlbumController.getAlbums().find { it.getId() == albumId }
-
-                        if (album?.photos?.isNotEmpty() == true) {
-                            mLoadingView.visibility = View.VISIBLE
-                            val startTime = SystemClock.elapsedRealtime()
-
-                            lifecycleScope.launch(Dispatchers.IO) {
-                                album.photos.let { photos ->
-                                    AlbumController.cleanCompletedPhoto(photos)
-                                    photos.forEach { it.cancelOperated() }
-                                }
-
-                                runOnUiThread {
-                                    val intent = Intent(
-                                        this@MainActivity,
-                                        OperationActivity::class.java
-                                    )
-                                    intent.putExtra(KEY_INTENT_ALBUM_ID, albumId)
-                                    val spendTime = SystemClock.elapsedRealtime() - startTime
-                                    mRecyclerView.postDelayed(
-                                        {
-                                            mLoadingView.visibility = View.GONE
-                                            startActivity(intent)
-                                        }, MIN_SHOW_LOADING_TIME - spendTime
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    .show()
-
-            } else {
-                val intent = Intent(
-                    this@MainActivity,
-                    if (isAlbumOperated(albumId)) RecycleBinActivity::class.java else OperationActivity::class.java
-                )
-                intent.putExtra(KEY_INTENT_ALBUM_ID, albumId)
-                startActivity(intent)
-            }
-        }
-        mAdapter.setHasStableIds(true)
-
-        mRecyclerView.setHasFixedSize(true)
-        mRecyclerView.setLayoutManager(LinearLayoutManager(this))
-        mRecyclerView.setAdapter(mAdapter)
-
-        findViewById<View>(R.id.btn_sort_order).setOnClickListener {
-            SortDialogFragment.newInstance().show(supportFragmentManager, "SortDialogFragment")
-        }
+        initData()
     }
 
-    fun loadAlbums(scrollToTop: Boolean = false) {
+    private fun initData() {
+        if (!PermissionUtils.checkReadImagePermission(this)
+        ) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("请授权")
+                .setMessage("授权以访问设备上的图片")
+                .setCancelable(false)
+                .setNegativeButton("关闭") { dialog, which ->
+                    finish()
+                }
+                .setPositiveButton("去授权") { dialog, which ->
+                    PermissionUtils.getReadImagePermission(this, mPermissionLauncher)
+                }
+                .show()
+            return
+        }
+
         mLoadingView.visibility = View.VISIBLE
         lifecycleScope.launch(Dispatchers.IO) {
             val startTime = SystemClock.elapsedRealtime()
@@ -185,7 +158,74 @@ class MainActivity : AppCompatActivity() {
                                     albums.size
                                 )
 
-                            sortAlbums(albums, scrollToTop)
+                            mAdapter =
+                                AlbumAdapter(sortAlbums(albums)) { albumId, albumFormatDate, completed ->
+                                    if (completed) {
+                                        MaterialAlertDialogBuilder(this@MainActivity)
+                                            .setTitle(albumFormatDate)
+                                            .setMessage("要再次清理此文件夹中的图片吗")
+                                            .setCancelable(false)
+                                            .setNegativeButton("取消") { dialog, which -> }
+                                            .setPositiveButton("确认") { dialog, which ->
+                                                val album: Album? =
+                                                    AlbumController.getAlbums()
+                                                        .find { it.getId() == albumId }
+
+                                                if (album?.photos?.isNotEmpty() == true) {
+                                                    mLoadingView.visibility = View.VISIBLE
+                                                    val startTime = SystemClock.elapsedRealtime()
+
+                                                    lifecycleScope.launch(Dispatchers.IO) {
+                                                        album.photos.let { photos ->
+                                                            AlbumController.cleanCompletedPhoto(
+                                                                photos
+                                                            )
+                                                            photos.forEach { it.cancelOperated() }
+                                                        }
+
+                                                        runOnUiThread {
+                                                            val intent = Intent(
+                                                                this@MainActivity,
+                                                                OperationActivity::class.java
+                                                            )
+                                                            intent.putExtra(
+                                                                KEY_INTENT_ALBUM_ID,
+                                                                albumId
+                                                            )
+                                                            val spendTime =
+                                                                SystemClock.elapsedRealtime() - startTime
+                                                            mRecyclerView.postDelayed(
+                                                                {
+                                                                    mLoadingView.visibility =
+                                                                        View.GONE
+                                                                    mOperationLauncher.launch(intent)
+                                                                }, MIN_SHOW_LOADING_TIME - spendTime
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            .show()
+
+                                    } else {
+                                        val intent = Intent(
+                                            this@MainActivity,
+                                            if (isAlbumOperated(albumId)) RecycleBinActivity::class.java else OperationActivity::class.java
+                                        )
+                                        intent.putExtra(KEY_INTENT_ALBUM_ID, albumId)
+                                        mOperationLauncher.launch(intent)
+                                    }
+                                }
+                            mAdapter.setHasStableIds(true)
+
+                            mRecyclerView.setHasFixedSize(true)
+                            mRecyclerView.setLayoutManager(LinearLayoutManager(this@MainActivity))
+                            mRecyclerView.setAdapter(mAdapter)
+
+                            findViewById<View>(R.id.btn_sort_order).setOnClickListener {
+                                SortDialogFragment.newInstance()
+                                    .show(supportFragmentManager, "SortDialogFragment")
+                            }
                         }
                     },
                     MIN_SHOW_LOADING_TIME - spendTime
@@ -194,27 +234,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun prepareData() {
-        if (!PermissionUtils.checkReadImagePermission(this)
-        ) {
-            MaterialAlertDialogBuilder(this)
-                .setTitle("请授权")
-                .setMessage("授权以访问设备上的图片")
-                .setCancelable(false)
-                .setNegativeButton("关闭") { dialog, which ->
-                    finish()
-                }
-                .setPositiveButton("去授权") { dialog, which ->
-                    PermissionUtils.getReadImagePermission(this, launcher)
-                }
-                .show()
-
-        } else {
-            loadAlbums()
-        }
-    }
-
-    private fun sortAlbums(albums: ArrayList<Album>, scrollToTop: Boolean = false) {
+    private fun sortAlbums(albums: ArrayList<Album>): ArrayList<Album> {
         when (ConfigHost.getSortType(this)) {
             SortDialogFragment.DATE_DOWN -> {
                 albums.sortByDescending(Album::getDateTime)
@@ -240,10 +260,7 @@ class MainActivity : AppCompatActivity() {
                 albums.sortByDescending(Album::isOperated)
             }
         }
-        mAdapter.setData(albums)
-        if (scrollToTop) {
-            mRecyclerView.scrollToPosition(0)
-        }
+        return albums
     }
 
     private fun isAlbumOperated(albumId: Long): Boolean {

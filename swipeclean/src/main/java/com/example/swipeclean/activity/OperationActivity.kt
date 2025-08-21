@@ -95,6 +95,13 @@ class OperationActivity : AppCompatActivity() {
         initView()
     }
 
+    override fun finish() {
+        val intent = Intent()
+        intent.putExtra(KEY_INTENT_ALBUM_ID, mAlbum?.getId() ?: 0L)
+        setResult(RESULT_OK, intent)
+        super.finish()
+    }
+
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         if (mIsAnimating) {
             return true

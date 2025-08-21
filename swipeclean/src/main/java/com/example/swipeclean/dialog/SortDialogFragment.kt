@@ -108,7 +108,7 @@ class SortDialogFragment(@LayoutRes contentLayoutId: Int = R.layout.sheet_dialog
     private fun doOnClick(targetSortType: Int, activity: Activity) {
         ConfigHost.setSortType(targetSortType, activity)
         if (activity is MainActivity) {
-            activity.loadAlbums(true)
+            activity.onChangeSort()
         }
         dismissAllowingStateLoss()
     }
