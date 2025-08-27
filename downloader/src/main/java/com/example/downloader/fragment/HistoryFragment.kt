@@ -86,12 +86,8 @@ class HistoryFragment : Fragment() {
                 HistoryDetailDialogFragment.newInstance(taskHistory)
             historyDetailDialogFragment.show(childFragmentManager, "HistoryDetailDialogFragment")
         }
-        context?.let {
-            val layoutManager = LinearLayoutManager(it)
-            layoutManager.reverseLayout = true
-            layoutManager.stackFromEnd = true
-            mRecyclerView.layoutManager = layoutManager
-        }
+        val layoutManager = LinearLayoutManager(view.context)
+        mRecyclerView.layoutManager = layoutManager
 
         lifecycleScope.launch(Dispatchers.IO) {
             val allHistory = MyApplication.database.historyDao().queryAll()
@@ -163,7 +159,7 @@ class HistoryFragment : Fragment() {
 
             withContext(Dispatchers.Main) {
                 mAdapter.setData(ArrayList(histories))
-                mRecyclerView.scrollToPosition(mAdapter.itemCount - 1)
+                mRecyclerView.scrollToPosition(0)
             }
         }
     }

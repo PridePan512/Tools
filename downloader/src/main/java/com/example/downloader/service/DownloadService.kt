@@ -34,7 +34,7 @@ class DownloadService : Service() {
 
     private val NOTIFICATION_CHANNEL_ID = "channel_id"
     private val NOTIFICATION_CHANNEL_NAME = "channel_name"
-    private val FOREGROUND_ID = 1
+    private val FOREGROUND_ID = 101
     private val KEY_DOWNLOAD_GROUP = "notification_group"
     private var mNotificationManager: NotificationManager? = null
     private lateinit var mPendingIntent: PendingIntent
@@ -61,7 +61,7 @@ class DownloadService : Service() {
                 0,
                 Intent(this, MainActivity::class.java).putExtra(
                     CLEAR_COMPLETE_NOTIFICATION,
-                    "clear"
+                    CLEAR_COMPLETE_NOTIFICATION
                 ),
                 PendingIntent.FLAG_IMMUTABLE
             )

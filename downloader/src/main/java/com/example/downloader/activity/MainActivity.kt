@@ -3,7 +3,6 @@ package com.example.downloader.activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.text.TextUtils
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,6 +26,7 @@ import org.greenrobot.eventbus.EventBus
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var mViewPager2: ViewPager2
     private val mLauncher1: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 点击通知后触发清理已完成的通知
-        if (!TextUtils.isEmpty(intent.getStringExtra(DownloadService.CLEAR_COMPLETE_NOTIFICATION))) {
+        if (DownloadService.CLEAR_COMPLETE_NOTIFICATION == intent?.getStringExtra(DownloadService.CLEAR_COMPLETE_NOTIFICATION)) {
             EventBus.getDefault().post(ClearCompleteNotificationEvent())
         }
     }
@@ -60,17 +60,31 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         // 点击通知后触发清理已完成的通知
-        if (!TextUtils.isEmpty(intent?.getStringExtra(DownloadService.CLEAR_COMPLETE_NOTIFICATION))) {
+        if (DownloadService.CLEAR_COMPLETE_NOTIFICATION == intent?.getStringExtra(DownloadService.CLEAR_COMPLETE_NOTIFICATION)) {
             EventBus.getDefault().post(ClearCompleteNotificationEvent())
         }
     }
 
-    private fun initView() {
-        val viewPager2 = findViewById<ViewPager2>(R.id.v_viewpager2)
-        val navigationView = findViewById<BottomNavigationView>(R.id.v_bottom_navigation)
-        viewPager2.offscreenPageLimit = 2
+    fun selectDownloadIndex() {
+        if (mViewPager2.currentItem == 0) {
+            return
+        }
+        mViewPager2.currentItem = 0
+    }
 
-        viewPager2.adapter = object : FragmentStateAdapter(this) {
+    fun selectHistoryIndex() {
+        if (mViewPager2.currentItem == 1) {
+            return
+        }
+        mViewPager2.currentItem = 1
+    }
+
+    private fun initView() {
+        mViewPager2 = findViewById(R.id.v_viewpager2)
+        val navigationView = findViewById<BottomNavigationView>(R.id.v_bottom_navigation)
+        mViewPager2.offscreenPageLimit = 2
+
+        mViewPager2.adapter = object : FragmentStateAdapter(this) {
             override fun createFragment(position: Int): Fragment {
                 return if (position == 0) {
                     DownloadFragment()
@@ -87,12 +101,12 @@ class MainActivity : AppCompatActivity() {
         navigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_download -> {
-                    viewPager2.currentItem = 0
+                    mViewPager2.currentItem = 0
                     true
                 }
 
                 R.id.navigation_history -> {
-                    viewPager2.currentItem = 1
+                    mViewPager2.currentItem = 1
                     true
                 }
 
@@ -100,7 +114,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        viewPager2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+        mViewPager2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 navigationView.menu[position].isChecked = true

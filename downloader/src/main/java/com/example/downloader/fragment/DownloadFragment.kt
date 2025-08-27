@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.downloader.R
+import com.example.downloader.activity.MainActivity
 import com.example.downloader.adapter.TaskDetectAdapter
 import com.example.downloader.business.LibHelper
 import com.example.downloader.business.model.YtDlpException
@@ -90,6 +91,11 @@ class DownloadFragment : Fragment() {
     fun onMessage(event: FillUrlEvent) {
         searchUrl(event.url)
         mUrlEditText.setText(event.url)
+
+        val activity = activity
+        if (activity is MainActivity) {
+            activity.selectDownloadIndex()
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
