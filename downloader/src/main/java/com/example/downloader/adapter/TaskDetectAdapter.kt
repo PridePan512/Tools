@@ -21,9 +21,11 @@ class TaskDetectAdapter() :
     RecyclerView.Adapter<TaskDetectAdapter.MyViewHolder>() {
 
     companion object {
-        val FLAG_UPDATE_STATE = 0
+        const val FLAG_UPDATE_STATE = 0
     }
 
+
+    // TODO: 此处不能依赖position  需要修改
     var onDownloadClick: ((videoTask: VideoTask, position: Int) -> Unit)? = null
 
     private val mVideoTasks = ArrayList<VideoTask>()
@@ -46,7 +48,7 @@ class TaskDetectAdapter() :
         updateItem(holder, videoTask)
         holder.downloadButton.setOnClickListener {
             holder.progressView.isIndeterminate = true
-            onDownloadClick?.invoke(videoTask, position)
+            onDownloadClick?.invoke(videoTask, holder.bindingAdapterPosition)
         }
     }
 
@@ -79,6 +81,10 @@ class TaskDetectAdapter() :
     fun insertTask(videoInfo: VideoInfo) {
         mVideoTasks.add(VideoTask(videoInfo))
         notifyItemInserted(mVideoTasks.size - 1)
+    }
+
+    fun getPositionById(id: Long): Int {
+        return mVideoTasks.indexOfFirst { it.id == id }
     }
 
     fun updateItem(
@@ -122,8 +128,7 @@ class TaskDetectAdapter() :
                 holder.progressView.visibility = View.GONE
                 holder.completeImageView.visibility = View.GONE
                 holder.downloadButton.visibility = View.VISIBLE
-                holder.failedTitleTextView.text = videoTask.error?.title
-                holder.failedContentTextView.text = videoTask.error?.content
+                holder.failedContentTextView.text = videoTask.error?.message
                 holder.failedView.visibility = View.VISIBLE
                 holder.downloadSpeedTextView.visibility = View.GONE
                 holder.downloadSpeedTextView.text = ""
@@ -137,7 +142,6 @@ class TaskDetectAdapter() :
         val completeImageView = itemView.findViewById<ImageView>(R.id.iv_complete)
         val progressView = itemView.findViewById<LinearProgressIndicator>(R.id.v_progress)
         val failedView = itemView.findViewById<View>(R.id.v_failed)
-        val failedTitleTextView = itemView.findViewById<TextView>(R.id.tv_failed_title)
         val failedContentTextView = itemView.findViewById<TextView>(R.id.tv_failed_content)
         val downloadSpeedTextView = itemView.findViewById<TextView>(R.id.tv_speed)
         private val coverImageView = itemView.findViewById<ImageView>(R.id.iv_cover)

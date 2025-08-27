@@ -17,4 +17,6 @@
     <string name="all">All</string>
     <string name="re_download">Re-download</string>
     <string name="insufficient_storage_space">Insufficient storage space</string>
+    <string name="download_success">download success</string>
+    <string name="download_failed">download failed</string>
 </resources>

@@ -14,9 +14,8 @@ import com.example.downloader.MyApplication
 import com.example.downloader.R
 import com.example.downloader.adapter.TaskHistoryAdapter
 import com.example.downloader.dialog.HistoryDetailDialogFragment
-import com.example.downloader.model.TaskHistory
-import com.example.downloader.model.eventbus.AddHistoryMessage
-import com.example.downloader.model.eventbus.DeleteHistoryMessage
+import com.example.downloader.model.eventbus.AddHistoryEvent
+import com.example.downloader.model.eventbus.DeleteHistoryEvent
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import kotlinx.coroutines.Dispatchers
@@ -62,23 +61,22 @@ class HistoryFragment : Fragment() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onMessage(addHistoryMessage: AddHistoryMessage) {
-        if (mCurrentSource == "All" || mCurrentSource == addHistoryMessage.taskHistory.source) {
-            mAdapter.insertItem(addHistoryMessage.taskHistory)
-            mRecyclerView.scrollToPosition(mAdapter.itemCount - 1)
+    fun onMessage(event: AddHistoryEvent) {
+        if (mCurrentSource == "All" || mCurrentSource == event.source) {
+            loadHistory()
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onMessage(deleteHistoryMessage: DeleteHistoryMessage) {
-        mAdapter.deleteItem(deleteHistoryMessage.id)
+    fun onMessage(event: DeleteHistoryEvent) {
+        mAdapter.deleteItem(event.id)
     }
 
     private fun initView(view: View) {
-        mRecyclerView = view.findViewById<RecyclerView>(R.id.v_recyclerview)
-        mSourcesContainer = view.findViewById<HorizontalScrollView>(R.id.hs_source)
-        mSourcesGroup = view.findViewById<ChipGroup>(R.id.cg_source)
-        mAllChip = view.findViewById<Chip>(R.id.chip_all)
+        mRecyclerView = view.findViewById(R.id.v_recyclerview)
+        mSourcesContainer = view.findViewById(R.id.hs_source)
+        mSourcesGroup = view.findViewById(R.id.cg_source)
+        mAllChip = view.findViewById(R.id.chip_all)
 
         mRecyclerView.setHasFixedSize(true)
         mAdapter = TaskHistoryAdapter()
@@ -114,7 +112,7 @@ class HistoryFragment : Fragment() {
             }
 
             withContext(Dispatchers.Main) {
-                mAdapter.setData(ArrayList<TaskHistory>(allHistory))
+                mAdapter.setData(ArrayList(allHistory))
                 mRecyclerView.adapter = mAdapter
 
                 if (mSources.size > 1) {
@@ -164,7 +162,8 @@ class HistoryFragment : Fragment() {
             }
 
             withContext(Dispatchers.Main) {
-                mAdapter.setData(ArrayList<TaskHistory>(histories))
+                mAdapter.setData(ArrayList(histories))
+                mRecyclerView.scrollToPosition(mAdapter.itemCount - 1)
             }
         }
     }

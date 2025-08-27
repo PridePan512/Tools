@@ -11,6 +11,10 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
     <!--android:extractNativeLibs="true"  允许从 APK 中提取原生库（即 .so 文件）到文件系统中-->
     <application
         android:name=".MyApplication"
@@ -27,6 +31,7 @@
         <activity
             android:name=".activity.MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
@@ -45,6 +50,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <service
+            android:name=".service.DownloadService"
+            android:enabled="true"
+            android:foregroundServiceType="dataSync" />
 
     </application>
 

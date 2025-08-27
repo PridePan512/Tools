@@ -14,8 +14,8 @@ import androidx.lifecycle.lifecycleScope
 import com.example.downloader.MyApplication
 import com.example.downloader.R
 import com.example.downloader.model.TaskHistory
-import com.example.downloader.model.eventbus.DeleteHistoryMessage
-import com.example.downloader.model.eventbus.UrlMessage
+import com.example.downloader.model.eventbus.DeleteHistoryEvent
+import com.example.downloader.model.eventbus.FillUrlEvent
 import com.example.lib.utils.AndroidUtils
 import com.example.lib.utils.StringUtils
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -81,7 +81,7 @@ class HistoryDetailDialogFragment(@LayoutRes contentLayoutId: Int = R.layout.dia
                 downloadPathTextView.visibility = View.GONE
                 operationButton.text = ContextCompat.getString(context, R.string.re_download)
                 operationButton.setOnClickListener {
-                    EventBus.getDefault().post(UrlMessage(url!!))
+                    EventBus.getDefault().post(FillUrlEvent(url!!))
                     dismissAllowingStateLoss()
                 }
             }
@@ -99,7 +99,7 @@ class HistoryDetailDialogFragment(@LayoutRes contentLayoutId: Int = R.layout.dia
             }
             deleteButton.setOnClickListener {
                 // TODO: 增加弹窗: 确认删除、是否保留文件
-                EventBus.getDefault().post(DeleteHistoryMessage(id))
+                EventBus.getDefault().post(DeleteHistoryEvent(id))
                 lifecycleScope.launch(Dispatchers.IO) {
                     MyApplication.database.historyDao().deleteHistory(id)
                 }

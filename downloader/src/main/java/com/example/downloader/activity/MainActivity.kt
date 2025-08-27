@@ -1,7 +1,12 @@
 package com.example.downloader.activity
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.text.TextUtils
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -12,11 +17,22 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.downloader.R
 import com.example.downloader.fragment.DownloadFragment
 import com.example.downloader.fragment.HistoryFragment
+import com.example.downloader.model.eventbus.ClearCompleteNotificationEvent
+import com.example.downloader.service.DownloadService
 import com.example.lib.utils.AndroidUtils
+import com.example.lib.utils.PermissionUtils
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import org.greenrobot.eventbus.EventBus
 
 
 class MainActivity : AppCompatActivity() {
+
+    private val mLauncher1: ActivityResultLauncher<String> =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+
+    private val mLauncher2: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -28,6 +44,25 @@ class MainActivity : AppCompatActivity() {
         }
 
         initView()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !PermissionUtils.checkNotificationPermission(
+                this
+            )
+        ) {
+            PermissionUtils.getNotificationPermission(this, mLauncher1, mLauncher2)
+        }
+
+        // 点击通知后触发清理已完成的通知
+        if (!TextUtils.isEmpty(intent.getStringExtra(DownloadService.CLEAR_COMPLETE_NOTIFICATION))) {
+            EventBus.getDefault().post(ClearCompleteNotificationEvent())
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        // 点击通知后触发清理已完成的通知
+        if (!TextUtils.isEmpty(intent?.getStringExtra(DownloadService.CLEAR_COMPLETE_NOTIFICATION))) {
+            EventBus.getDefault().post(ClearCompleteNotificationEvent())
+        }
     }
 
     private fun initView() {

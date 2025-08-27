@@ -9,7 +9,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.example.downloader.R
-import com.example.downloader.model.eventbus.UrlMessage
+import com.example.downloader.model.eventbus.FillUrlEvent
 import com.example.lib.utils.AndroidUtils
 import org.greenrobot.eventbus.EventBus
 
@@ -56,8 +56,9 @@ class ClipboardDialogFragment : DialogFragment() {
         urlTextView.text = url
 
         view.findViewById<Button>(R.id.btn_open_url).setOnClickListener {
+            AndroidUtils.hideKeyboard(view.context, view)
             dismissAllowingStateLoss()
-            EventBus.getDefault().post(UrlMessage(url!!))
+            EventBus.getDefault().post(FillUrlEvent(url!!))
 //            context?.let {
 //                AndroidUtil.clearClipboard(it)
 //            }

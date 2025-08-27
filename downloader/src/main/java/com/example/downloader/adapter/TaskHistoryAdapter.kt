@@ -47,18 +47,11 @@ class TaskHistoryAdapter() : RecyclerView.Adapter<TaskHistoryAdapter.MyViewHolde
     }
 
     fun setData(taskHistories: ArrayList<TaskHistory>) {
-//        mTaskHistories = taskHistories
-//        notifyDataSetChanged()
         val callback = MyDiffCallback(mTaskHistories, taskHistories)
         val diffResult = DiffUtil.calculateDiff(callback)
         mTaskHistories.clear()
         mTaskHistories.addAll(taskHistories)
         diffResult.dispatchUpdatesTo(this)
-    }
-
-    fun insertItem(history: TaskHistory) {
-        mTaskHistories.add(history)
-        notifyItemInserted(mTaskHistories.size - 1)
     }
 
     fun deleteItem(id: Long) {
