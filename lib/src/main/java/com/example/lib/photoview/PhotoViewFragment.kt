@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.RectEvaluator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Rect
@@ -12,6 +13,7 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
@@ -37,7 +39,6 @@ import com.example.lib.utils.AndroidUtils
 import java.util.Locale
 import kotlin.math.min
 
-// TODO: 这个页面可以增加一个恢复按钮
 /**
 需要原图centerCrop，大图fitCenter
  */
@@ -181,14 +182,34 @@ class PhotoViewFragment() : Fragment() {
                 return MyViewHolder(view)
             }
 
+            @SuppressLint("ClickableViewAccessibility")
             override fun onBindViewHolder(
                 holder: MyViewHolder,
                 position: Int
             ) {
                 mListener.showPhoto(holder.photoView, position)
-                holder.photoView.setOnClickListener {
-                    doBackgroundChangeAnimator()
-                }
+                holder.photoView.setOnViewTapListener(object : OnViewTapListener {
+                    override fun onViewTap(
+                        view: View?,
+                        x: Float,
+                        y: Float
+                    ) {
+                        doBackgroundChangeAnimator()
+                    }
+
+                })
+                holder.photoView.setOnSingleFlingListener(object : OnSingleFlingListener {
+                    override fun onFling(
+                        e1: MotionEvent?,
+                        e2: MotionEvent?,
+                        velocityX: Float,
+                        velocityY: Float
+                    ): Boolean {
+                        doClose()
+                        return true
+                    }
+
+                })
             }
 
             override fun getItemCount(): Int {
@@ -509,7 +530,6 @@ class PhotoViewFragment() : Fragment() {
         val centerCropWidth = (sourceWidth * scale).toInt()
         val centerCropHeight = (sourceHeight * scale).toInt()
 
-        mTranslationImageView.visibility = View.VISIBLE
         Glide
             .with(mTranslationImageView.context)
             .load(uri)
@@ -531,6 +551,7 @@ class PhotoViewFragment() : Fragment() {
                     dataSource: DataSource?,
                     isFirstResource: Boolean
                 ): Boolean {
+                    mTranslationImageView.visibility = View.VISIBLE
                     mViewpager.visibility = View.INVISIBLE
                     return false
                 }
