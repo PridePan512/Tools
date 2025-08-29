@@ -1,4 +1,4 @@
-package com.example.swipeclean.other
+package com.example.swipeclean
 
 import android.app.Application
 import com.example.swipeclean.business.AlbumController
