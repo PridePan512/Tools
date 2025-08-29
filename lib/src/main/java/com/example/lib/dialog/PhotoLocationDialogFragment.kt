@@ -18,7 +18,6 @@ import android.view.ViewOutlineProvider
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.RequiresPermission
 import androidx.core.net.toUri
@@ -45,6 +44,7 @@ class PhotoLocationDialogFragment() : BottomSheetDialogFragment() {
         const val KEY_ID_LONGITUDE: String = "location_longitude"
         const val KEY_ID_LATITUDE: String = "location_latitude"
 
+        @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
         fun newInstance(
             uri: Uri,
             latitude: Double,
@@ -63,7 +63,6 @@ class PhotoLocationDialogFragment() : BottomSheetDialogFragment() {
     private val leafletMapHtmlPath = "file:///android_asset/html/leaflet_map.html"
     private lateinit var mWebView: WebView
 
-    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -74,8 +73,7 @@ class PhotoLocationDialogFragment() : BottomSheetDialogFragment() {
         return view
     }
 
-    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
+    @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility", "MissingPermission")
     private fun initView(view: View) {
         val activity = activity ?: return
         val arguments = arguments ?: return
@@ -84,7 +82,7 @@ class PhotoLocationDialogFragment() : BottomSheetDialogFragment() {
         val locationTextView = view.findViewById<TextView>(R.id.tv_location)
         val latLongTextView = view.findViewById<TextView>(R.id.tv_latlong)
         val openInGoogleMapTextView = view.findViewById<TextView>(R.id.tv_open_in_google_map)
-        val locationIconImageView = view.findViewById<ImageView>(R.id.iv_location)
+        //val locationIconImageView = view.findViewById<ImageView>(R.id.iv_location)
 
         mWebView = view.findViewById(R.id.v_webview)
         mWebView.outlineProvider = object : ViewOutlineProvider() {

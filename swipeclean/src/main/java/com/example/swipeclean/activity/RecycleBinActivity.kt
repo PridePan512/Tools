@@ -1,5 +1,6 @@
 package com.example.swipeclean.activity
 
+import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
@@ -13,6 +14,8 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.component1
+import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -75,9 +78,16 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
             }
         }
 
-    private val oldDeleteLauncher: ActivityResultLauncher<String> =
+    private val mOldDeleteLauncher1: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             if (it) {
+                useOldDelete()
+            }
+        }
+
+    private val mOldDeleteLauncher2: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { (resultCode, data) ->
+            if (PermissionUtils.checkWritePermission(this)) {
                 useOldDelete()
             }
         }
@@ -196,7 +206,11 @@ class RecycleBinActivity : AppCompatActivity(), PhotoViewFragment.Listener {
                             useOldDelete()
 
                         } else {
-                            PermissionUtils.getWritePermission(this, oldDeleteLauncher)
+                            PermissionUtils.getWritePermission(
+                                this,
+                                mOldDeleteLauncher1,
+                                mOldDeleteLauncher2
+                            )
                         }
                     }
                     .setNegativeButton(R.string.cancel) { _, _ -> }

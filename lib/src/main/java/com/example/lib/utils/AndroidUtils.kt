@@ -1,5 +1,6 @@
 package com.example.lib.utils
 
+import android.Manifest
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -234,13 +235,19 @@ object AndroidUtils {
      * 根据图片的uri获取经纬度信息
      */
     @WorkerThread
-    fun getLatLongByUri(context: Context, uri: Uri): DoubleArray? {
+    @RequiresPermission(Manifest.permission.ACCESS_MEDIA_LOCATION)
+    fun getLatLongByUri(context: Context, uri: Uri): Pair<Double, Double>? {
         return try {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 val exif = ExifInterface(inputStream)
-                exif.latLong
+                val latLong = exif.latLong
+                var pair: Pair<Double, Double>? = null
+                if (latLong != null && latLong.size == 2) {
+                    pair = Pair(latLong[0], latLong[1])
+                }
+                pair
             }
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             null
         }
     }
@@ -249,6 +256,12 @@ object AndroidUtils {
      * 根据经纬度获取位置信息
      */
     @WorkerThread
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_NETWORK_STATE,
+            Manifest.permission.INTERNET
+        ]
+    )
     fun getAddress(context: Context, longitude: Double, latitude: Double): String? {
         try {
             val addresses =

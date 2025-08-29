@@ -45,9 +45,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mSortButton: MaterialButton
     private lateinit var mAdapter: AlbumAdapter
     private lateinit var mLoadingView: View
-    private val mPermissionLauncher: ActivityResultLauncher<String> =
+    private val mPermissionLauncher1: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             initData()
+        }
+
+    private val mPermissionLauncher2: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { (resultCode, data) ->
+            //如果此处有回调 证明用户是通过intent跳转到了系统的授权界面了 此时应该判断获取的是部分访问还是完全访问还是不允许访问
         }
 
     private val mOperationLauncher: ActivityResultLauncher<Intent> =
@@ -117,7 +122,11 @@ class MainActivity : AppCompatActivity() {
                     finish()
                 }
                 .setPositiveButton(R.string.grant_permission) { dialog, which ->
-                    PermissionUtils.getReadImagePermission(this, mPermissionLauncher)
+                    PermissionUtils.getReadImagePermission(
+                        this,
+                        mPermissionLauncher1,
+                        mPermissionLauncher2
+                    )
                 }
                 .show()
             return
