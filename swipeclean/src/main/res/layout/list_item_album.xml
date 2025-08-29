@@ -75,16 +75,14 @@
         <com.example.swipeclean.view.DualProgressIndicator
             android:id="@+id/lp_progress"
             android:layout_width="0dp"
-            android:layout_height="6dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             app:indicatorColor="@color/bg_progress_deleted"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintCircleRadius="3dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/tv_date"
             app:layout_constraintTop_toBottomOf="@id/tv_progress"
             app:trackColor="@color/bg_progress"
-            app:trackCornerRadius="3dp"
             app:trackThickness="6dp" />
 
         <View
