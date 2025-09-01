@@ -26,7 +26,7 @@ object PermissionUtils {
         if (checkReadImagePermission(activity)) {
             return
         }
-        //在安卓14及以上机型，直接申请READ_MEDIA_IMAGES，系统会弹出部分授权的选项，不用同时申请READ_MEDIA_VISUAL_USER_SELECTED
+        //在安卓14及以上机型，直接申请READ_MEDIA_IMAGES，系统会弹出部分授权的选项，不用同时申请 READ_MEDIA_VISUAL_USER_SELECTED
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
             Manifest.permission.READ_MEDIA_IMAGES
         else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU)
@@ -46,44 +46,42 @@ object PermissionUtils {
     /**
      * 检查读图片权限
      */
-    // TODO: 根据版本不同 进行不同的检查
     fun checkReadImagePermission(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
+            return ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+                    ) == PackageManager.PERMISSION_GRANTED
+
+        } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU) {
+            return ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            return ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    /**
+     * 检查是否是允许部分访问媒体文件
+     */
+    fun checkIsLimitReadMedia(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU) {
+            return false
+        }
+
         return ContextCompat.checkSelfPermission(
             context,
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            else
-                Manifest.permission.READ_MEDIA_IMAGES
+            Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
         ) == PackageManager.PERMISSION_GRANTED
-
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-//            && (ContextCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.READ_MEDIA_IMAGES
-//            ) == PERMISSION_GRANTED
-//                    || ContextCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.READ_MEDIA_VIDEO
-//            ) == PERMISSION_GRANTED)
-//        ) {
-//            // Android 13及以上完整照片和视频访问权限
-//        } else if (
-//            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-//            ContextCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
-//            ) == PERMISSION_GRANTED
-//        ) {
-//            // Android 14及以上部分照片和视频访问权限
-//        } else if (ContextCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.READ_EXTERNAL_STORAGE
-//            ) == PERMISSION_GRANTED
-//        ) {
-//            // Android 12及以下完整本地读写访问权限
-//        } else {
-//            // 无本地读写访问权限
-//        }
     }
 
     /**
