@@ -1,4 +1,4 @@
-package com.example.downloader.utils
+package com.example.lib.view
 
 import android.content.Context
 import android.view.MotionEvent
@@ -7,6 +7,14 @@ import android.widget.OverScroller
 import androidx.recyclerview.widget.RecyclerView
 import com.example.lib.utils.AndroidUtils
 
+/**使用
+DragSelectTouchListener = new DragSelectTouchListener((start, end) ->
+{
+//changed: start -> end
+});
+RecyclerView.addOnItemTouchListener(mDragSelectTouchListener);
+mDragSelectTouchListener.startDragSelection(position);
+ */
 class DragSelectTouchListener(
     private val selectListener: OnDragSelectListener
 ) : RecyclerView.OnItemTouchListener {
