@@ -234,10 +234,12 @@ class PhotoViewFragment() : BaseFragment<FragmentPhotoViewBinding>() {
     }
 
     private fun removeFragment() {
-        getParentFragmentManager()
-            .beginTransaction()
-            .remove(this@PhotoViewFragment)
-            .commit()
+        if (isAdded) {
+            getParentFragmentManager()
+                .beginTransaction()
+                .remove(this@PhotoViewFragment)
+                .commit()
+        }
     }
 
     private fun doClose() {
