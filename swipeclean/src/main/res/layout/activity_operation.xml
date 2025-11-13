@@ -9,7 +9,7 @@
     tools:context="com.example.swipeclean.activity.OperationActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/v_title_bar"
+        android:id="@+id/cl_title_bar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         app:layout_constraintTop_toTopOf="parent">
@@ -44,12 +44,12 @@
             android:textColor="@color/text_main"
             android:textSize="18sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/bt_cancel"
+            app:layout_constraintEnd_toStartOf="@id/btn_cancel"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="1/100" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/bt_cancel"
+            android:id="@+id/btn_cancel"
             style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -69,18 +69,18 @@
         android:layout_marginTop="20dp"
         android:layout_marginBottom="26dp"
         android:background="?attr/colorSurface"
-        app:layout_constraintBottom_toTopOf="@+id/bt_trash"
-        app:layout_constraintTop_toBottomOf="@id/v_title_bar" />
+        app:layout_constraintBottom_toTopOf="@+id/btn_trash"
+        app:layout_constraintTop_toBottomOf="@id/cl_title_bar" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/v_up_image"
+        android:id="@+id/cl_up_image"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="26dp"
         android:background="?attr/colorSurface"
-        app:layout_constraintBottom_toTopOf="@+id/bt_trash"
-        app:layout_constraintTop_toBottomOf="@id/v_title_bar">
+        app:layout_constraintBottom_toTopOf="@+id/btn_trash"
+        app:layout_constraintTop_toBottomOf="@id/cl_title_bar">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/iv_up_image"
@@ -143,7 +143,7 @@
         android:layout_height="60dp"
         android:layout_marginBottom="8dp"
         android:src="@drawable/ic_vector_action_delete"
-        app:layout_constraintBottom_toBottomOf="@id/v_up_image"
+        app:layout_constraintBottom_toBottomOf="@id/cl_up_image"
         app:layout_constraintEnd_toStartOf="@id/iv_keep"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -153,12 +153,12 @@
         android:layout_height="60dp"
         android:layout_marginBottom="8dp"
         android:src="@drawable/ic_vector_action_keep"
-        app:layout_constraintBottom_toBottomOf="@id/v_up_image"
+        app:layout_constraintBottom_toBottomOf="@id/cl_up_image"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_delete" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/bt_trash"
+        android:id="@+id/btn_trash"
         style="@style/Widget.Material3.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

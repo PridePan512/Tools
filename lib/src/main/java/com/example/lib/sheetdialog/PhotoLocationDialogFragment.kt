@@ -1,4 +1,4 @@
-package com.example.lib.dialog
+package com.example.lib.sheetdialog
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -37,6 +37,9 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.Locale
 
+/**
+ * 显示图片和位置信息的弹窗
+ */
 class PhotoLocationDialogFragment() : BottomSheetDialogFragment() {
 
     companion object {

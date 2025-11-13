@@ -8,7 +8,7 @@
     tools:context="com.example.swipeclean.activity.MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/v_title_bar"
+        android:id="@+id/cl_title_bar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         app:layout_constraintTop_toTopOf="parent">
@@ -33,28 +33,27 @@
             android:visibility="gone"
             app:icon="@drawable/ic_vector_sort"
             app:iconTint="@color/text_main"
-            app:layout_constraintBottom_toBottomOf="@id/v_title_bar"
-            app:layout_constraintEnd_toEndOf="@id/v_title_bar"
-            app:layout_constraintTop_toTopOf="@id/v_title_bar"
+            app:layout_constraintBottom_toBottomOf="@id/cl_title_bar"
+            app:layout_constraintEnd_toEndOf="@id/cl_title_bar"
+            app:layout_constraintTop_toTopOf="@id/cl_title_bar"
             tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/v_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_title_bar">
+        app:layout_constraintTop_toBottomOf="@id/cl_title_bar">
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/v_cleaned"
+            android:id="@+id/cv_cleaned"
             android:layout_width="0dp"
             android:layout_height="73dp"
             android:layout_marginStart="20sp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="6dp"
-            app:layout_constraintEnd_toStartOf="@id/v_completed"
+            app:layout_constraintEnd_toStartOf="@id/cv_completed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:strokeColor="@color/bg_line">
@@ -106,14 +105,14 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/v_completed"
+            android:id="@+id/cv_completed"
             android:layout_width="0dp"
             android:layout_height="73dp"
             android:layout_marginStart="6dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="20dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/v_cleaned"
+            app:layout_constraintStart_toEndOf="@id/cv_cleaned"
             app:layout_constraintTop_toTopOf="parent"
             app:strokeColor="@color/bg_line">
 
@@ -166,12 +165,12 @@
         </com.google.android.material.card.MaterialCardView>
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/v_albums"
+            android:id="@+id/cl_albums"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/v_cleaned"
+            app:layout_constraintTop_toBottomOf="@+id/cv_completed"
             tools:visibility="visible">
 
             <androidx.appcompat.widget.AppCompatImageView
@@ -228,7 +227,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/v_recyclerview"
+                android:id="@+id/rv_albums"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -237,12 +236,12 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/v_empty"
+            android:id="@+id/cl_empty"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/v_cleaned">
+            app:layout_constraintTop_toBottomOf="@+id/cv_cleaned">
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/iv_empty"

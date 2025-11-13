@@ -16,10 +16,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
 import android.widget.ImageView
-import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.createBitmap
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -27,20 +24,22 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
+import com.example.lib.mvvm.BaseActivity
 import com.example.lib.utils.AndroidUtils
 import com.example.swipeclean.business.AlbumController
 import com.example.swipeclean.model.Album
 import com.example.swipeclean.model.Image
 import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
+import com.example.swipeclean.viewmodel.MainViewModel
 import com.example.tools.R
-import com.google.android.material.button.MaterialButton
+import com.example.tools.databinding.ActivityOperationBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
 
-class OperationActivity : AppCompatActivity() {
+class OperationActivity : BaseActivity<MainViewModel, ActivityOperationBinding>() {
 
     companion object {
         const val PHOTO_OPERATION_KEEP = 0
@@ -54,18 +53,6 @@ class OperationActivity : AppCompatActivity() {
         const val DOWN_IMAGE_SCALE: Float = 0.9f
     }
 
-    private lateinit var mUpImageContainer: View
-    private lateinit var mTrashButton: MaterialButton
-    private lateinit var mDownImageView: ImageView
-    private lateinit var mUpImageView: ImageView
-    private lateinit var mMagnifyImageView: ImageView
-    private lateinit var mKeepImageView: ImageView
-    private lateinit var mDeleteImageView: ImageView
-    private lateinit var mKeepTextView: TextView
-    private lateinit var mDeleteTextView: TextView
-    private lateinit var mCountTextView: TextView
-    private lateinit var mDateTextView: TextView
-    private lateinit var mCancelButton: MaterialButton
     private var mShowMagnifyPhotoRunnable: Runnable? = null
     private var mUpImageViewRectF: RectF? = null
     private var mTouchX = -1f
@@ -85,14 +72,16 @@ class OperationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_operation)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        initView()
+    }
+
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        initView()
     }
 
     override fun finish() {
@@ -110,26 +99,13 @@ class OperationActivity : AppCompatActivity() {
     }
 
     private fun initView() {
-        mCountTextView = findViewById(R.id.tv_count)
-        mDateTextView = findViewById(R.id.tv_date)
-        mCancelButton = findViewById(R.id.bt_cancel)
-        mUpImageContainer = findViewById(R.id.v_up_image)
-        mUpImageView = findViewById(R.id.iv_up_image)
-        mDownImageView = findViewById(R.id.iv_down_image)
-        mKeepTextView = findViewById(R.id.tv_keep)
-        mDeleteTextView = findViewById(R.id.tv_delete)
-        mKeepImageView = findViewById(R.id.iv_keep)
-        mDeleteImageView = findViewById(R.id.iv_delete)
-        mTrashButton = findViewById(R.id.bt_trash)
-        mMagnifyImageView = findViewById(R.id.iv_magnify_image)
-
-        val params = mMagnifyImageView.layoutParams
+        val params = binding.ivMagnifyImage.layoutParams
         params.width = mScreenWidth / 2 - AndroidUtils.dpToPx(20)
-        mMagnifyImageView.layoutParams = params
+        binding.ivMagnifyImage.layoutParams = params
 
-        mDownImageView.scaleX = DOWN_IMAGE_SCALE
-        mDownImageView.scaleY = DOWN_IMAGE_SCALE
-        mTrashButton.isEnabled = false
+        binding.ivDownImage.scaleX = DOWN_IMAGE_SCALE
+        binding.ivDownImage.scaleY = DOWN_IMAGE_SCALE
+        binding.btnTrash.isEnabled = false
 
         mAlbum = AlbumController.getAlbums().find { item ->
             item.getId() == intent.getLongExtra(KEY_INTENT_ALBUM_ID, 0)
@@ -141,27 +117,27 @@ class OperationActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.btn_back).setOnClickListener { finish() }
 
-        mUpImageContainer.setOnTouchListener(mOnTouchListener)
+        binding.clUpImage.setOnTouchListener(mOnTouchListener)
 
-        mKeepImageView.setOnClickListener { startKeepPhoto() }
+        binding.ivKeep.setOnClickListener { startKeepPhoto() }
 
-        mDeleteImageView.setOnClickListener { startDeletePhoto() }
+        binding.ivDelete.setOnClickListener { startDeletePhoto() }
 
-        mTrashButton.setOnClickListener { openTrashActivity() }
+        binding.btnTrash.setOnClickListener { openTrashActivity() }
 
-        mCancelButton.setOnClickListener { startCancelPhoto() }
+        binding.btnCancel.setOnClickListener { startCancelPhoto() }
     }
 
     private fun setPhotos() {
         mAlbum?.let {
-            setPhoto(mUpImageView, it.images[it.getOperatedIndex()])
+            setPhoto(binding.ivUpImage, it.images[it.getOperatedIndex()])
             val nextIndex = it.getOperatedIndex() + 1
             if (nextIndex == it.getTotalCount()) {
-                mDownImageView.visibility = View.GONE
+                binding.ivDownImage.visibility = View.GONE
 
             } else {
                 if (nextIndex < it.images.size) {
-                    setPhoto(mDownImageView, it.images[nextIndex])
+                    setPhoto(binding.ivDownImage, it.images[nextIndex])
                 }
             }
         }
@@ -178,16 +154,16 @@ class OperationActivity : AppCompatActivity() {
 
     private fun refreshTitle() {
         mAlbum?.let {
-            mDateTextView.text = it.formatData
+            binding.tvDate.text = it.formatData
             val completeCount: Int = it.getOperatedIndex()
-            mCountTextView.text =
+            binding.tvCount.text =
                 String.format(
                     Locale.getDefault(),
                     "%d/%d",
                     completeCount + 1,
                     it.images.size
                 )
-            mCancelButton.isEnabled = completeCount != 0
+            binding.btnCancel.isEnabled = completeCount != 0
         }
     }
 
@@ -195,8 +171,12 @@ class OperationActivity : AppCompatActivity() {
         mAlbum?.let {
             val deleteCount: Int =
                 it.images.stream().filter { item -> item.isDelete() }.count().toInt()
-            mTrashButton.isEnabled = deleteCount != 0
-            mTrashButton.text = resources.getQuantityString(R.plurals.open_trash_bin_picture_count,deleteCount,deleteCount)
+            binding.btnTrash.isEnabled = deleteCount != 0
+            binding.btnTrash.text = resources.getQuantityString(
+                R.plurals.open_trash_bin_picture_count,
+                deleteCount,
+                deleteCount
+            )
         }
     }
 
@@ -213,26 +193,31 @@ class OperationActivity : AppCompatActivity() {
         if (mIsOperating || mAlbum?.isOperated() == true) {
             return
         }
-        mKeepTextView.alpha = 1f
+        binding.tvKeep.alpha = 1f
         val downScaleXAnimator = ObjectAnimator.ofFloat(
-            mDownImageView,
+            binding.ivDownImage,
             View.SCALE_X,
             DOWN_IMAGE_SCALE,
             1f
         )
         val downScaleYAnimator = ObjectAnimator.ofFloat(
-            mDownImageView,
+            binding.ivDownImage,
             View.SCALE_Y,
             DOWN_IMAGE_SCALE,
             1f
         )
-        val scaleXAnimator = ObjectAnimator.ofFloat(mKeepImageView, View.SCALE_X, 1f, 1.1f, 1f)
-        val scaleYAnimator = ObjectAnimator.ofFloat(mKeepImageView, View.SCALE_Y, 1f, 1.1f, 1f)
+        val scaleXAnimator = ObjectAnimator.ofFloat(binding.ivKeep, View.SCALE_X, 1f, 1.1f, 1f)
+        val scaleYAnimator = ObjectAnimator.ofFloat(binding.ivKeep, View.SCALE_Y, 1f, 1.1f, 1f)
         val translateXAnimator =
-            ObjectAnimator.ofFloat(mUpImageContainer, View.TRANSLATION_X, mScreenWidth.toFloat())
-        val translateYAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.TRANSLATION_Y, 200f)
-        val alphaAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ALPHA, 0f)
-        val rotateAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ROTATION, 20f)
+            ObjectAnimator.ofFloat(
+                binding.clUpImage,
+                View.TRANSLATION_X,
+                mScreenWidth.toFloat()
+            )
+        val translateYAnimator =
+            ObjectAnimator.ofFloat(binding.clUpImage, View.TRANSLATION_Y, 200f)
+        val alphaAnimator = ObjectAnimator.ofFloat(binding.clUpImage, View.ALPHA, 0f)
+        val rotateAnimator = ObjectAnimator.ofFloat(binding.clUpImage, View.ROTATION, 20f)
         val animatorSet = AnimatorSet()
         animatorSet.duration = AUTO_OPERATION_ANIMATOR_DURATION
         animatorSet.playTogether(
@@ -253,17 +238,17 @@ class OperationActivity : AppCompatActivity() {
 
             override fun onAnimationEnd(animation: Animator) {
                 super.onAnimationEnd(animation)
-                mKeepTextView.alpha = 0f
-                mDownImageView.scaleX = DOWN_IMAGE_SCALE
-                mDownImageView.scaleY = DOWN_IMAGE_SCALE
+                binding.tvKeep.alpha = 0f
+                binding.ivDownImage.scaleX = DOWN_IMAGE_SCALE
+                binding.ivDownImage.scaleY = DOWN_IMAGE_SCALE
                 doOnCompleted(PHOTO_OPERATION_KEEP)
                 mIsAnimating = false
             }
 
             override fun onAnimationCancel(animation: Animator) {
                 super.onAnimationCancel(animation)
-                mDownImageView.scaleX = DOWN_IMAGE_SCALE
-                mDownImageView.scaleY = DOWN_IMAGE_SCALE
+                binding.ivDownImage.scaleX = DOWN_IMAGE_SCALE
+                binding.ivDownImage.scaleY = DOWN_IMAGE_SCALE
                 mIsAnimating = false
             }
         })
@@ -275,24 +260,29 @@ class OperationActivity : AppCompatActivity() {
         if (mIsOperating || mAlbum?.isOperated() == true) {
             return
         }
-        mDeleteTextView.alpha = 1f
+        binding.tvDelete.alpha = 1f
         val downScaleXAnimator = ObjectAnimator.ofFloat(
-            mDownImageView,
+            binding.ivDownImage,
             View.SCALE_X, DOWN_IMAGE_SCALE,
             1f
         )
         val downScaleYAnimator = ObjectAnimator.ofFloat(
-            mDownImageView,
+            binding.ivDownImage,
             View.SCALE_Y, DOWN_IMAGE_SCALE,
             1f
         )
-        val scaleXAnimator = ObjectAnimator.ofFloat(mDeleteImageView, View.SCALE_X, 1f, 1.1f, 1f)
-        val scaleYAnimator = ObjectAnimator.ofFloat(mDeleteImageView, View.SCALE_Y, 1f, 1.1f, 1f)
+        val scaleXAnimator = ObjectAnimator.ofFloat(binding.ivDelete, View.SCALE_X, 1f, 1.1f, 1f)
+        val scaleYAnimator = ObjectAnimator.ofFloat(binding.ivDelete, View.SCALE_Y, 1f, 1.1f, 1f)
         val translateXAnimator =
-            ObjectAnimator.ofFloat(mUpImageContainer, View.TRANSLATION_X, -mScreenWidth.toFloat())
-        val translateYAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.TRANSLATION_Y, 200f)
-        val alphaAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ALPHA, 0f)
-        val rotateAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ROTATION, -20f)
+            ObjectAnimator.ofFloat(
+                binding.clUpImage,
+                View.TRANSLATION_X,
+                -mScreenWidth.toFloat()
+            )
+        val translateYAnimator =
+            ObjectAnimator.ofFloat(binding.clUpImage, View.TRANSLATION_Y, 200f)
+        val alphaAnimator = ObjectAnimator.ofFloat(binding.clUpImage, View.ALPHA, 0f)
+        val rotateAnimator = ObjectAnimator.ofFloat(binding.clUpImage, View.ROTATION, -20f)
         val animatorSet = AnimatorSet()
         animatorSet.duration = AUTO_OPERATION_ANIMATOR_DURATION
         animatorSet.playTogether(
@@ -313,17 +303,17 @@ class OperationActivity : AppCompatActivity() {
 
             override fun onAnimationEnd(animation: Animator) {
                 super.onAnimationEnd(animation)
-                mDeleteTextView.alpha = 0f
-                mDownImageView.scaleX = DOWN_IMAGE_SCALE
-                mDownImageView.scaleY = DOWN_IMAGE_SCALE
+                binding.tvDelete.alpha = 0f
+                binding.ivDownImage.scaleX = DOWN_IMAGE_SCALE
+                binding.ivDownImage.scaleY = DOWN_IMAGE_SCALE
                 doOnCompleted(PHOTO_OPERATION_DELETE)
                 mIsAnimating = false
             }
 
             override fun onAnimationCancel(animation: Animator) {
                 super.onAnimationCancel(animation)
-                mDownImageView.scaleX = DOWN_IMAGE_SCALE
-                mDownImageView.scaleY = DOWN_IMAGE_SCALE
+                binding.ivDownImage.scaleX = DOWN_IMAGE_SCALE
+                binding.ivDownImage.scaleY = DOWN_IMAGE_SCALE
                 mIsAnimating = false
             }
         })
@@ -348,39 +338,39 @@ class OperationActivity : AppCompatActivity() {
             return
         }
 
-        mDownImageView.visibility = View.VISIBLE
-        setPhoto(mUpImageView, lastImage)
-        setPhoto(mDownImageView, currentImage)
+        binding.ivDownImage.visibility = View.VISIBLE
+        setPhoto(binding.ivUpImage, lastImage)
+        setPhoto(binding.ivDownImage, currentImage)
 
         val scaleXAnimator = ObjectAnimator.ofFloat(
-            mDownImageView,
+            binding.ivDownImage,
             View.SCALE_X,
             1f,
             DOWN_IMAGE_SCALE
         )
         val scaleYAnimator = ObjectAnimator.ofFloat(
-            mDownImageView,
+            binding.ivDownImage,
             View.SCALE_Y,
             1f,
             DOWN_IMAGE_SCALE
         )
         val textAlphaAnimator = ObjectAnimator.ofFloat(
-            if (lastImage.isKeep()) mKeepTextView else mDeleteTextView,
+            if (lastImage.isKeep()) binding.tvKeep else binding.tvDelete,
             View.ALPHA,
             1f,
             0f
         )
         val translateXAnimator = ObjectAnimator.ofFloat(
-            mUpImageContainer,
+            binding.clUpImage,
             View.TRANSLATION_X,
             (mScreenWidth * (if (lastImage.isKeep()) 1 else -1)).toFloat(),
             0f
         )
         val translateYAnimator =
-            ObjectAnimator.ofFloat(mUpImageContainer, View.TRANSLATION_Y, 200f, 0f)
-        val alphaAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ALPHA, 0f, 1f)
+            ObjectAnimator.ofFloat(binding.clUpImage, View.TRANSLATION_Y, 200f, 0f)
+        val alphaAnimator = ObjectAnimator.ofFloat(binding.clUpImage, View.ALPHA, 0f, 1f)
         val rotateAnimator = ObjectAnimator.ofFloat(
-            mUpImageContainer,
+            binding.clUpImage,
             View.ROTATION,
             (20 * (if (lastImage.isKeep()) 1 else -1)).toFloat(),
             0f
@@ -468,18 +458,18 @@ class OperationActivity : AppCompatActivity() {
         setPhotos()
         refreshTitle()
 
-        mUpImageContainer.translationX = 0f
-        mUpImageContainer.translationY = 0f
-        mUpImageContainer.alpha = 1f
-        mUpImageContainer.rotation = 0f
+        binding.clUpImage.translationX = 0f
+        binding.clUpImage.translationY = 0f
+        binding.clUpImage.alpha = 1f
+        binding.clUpImage.rotation = 0f
     }
 
     private fun showMagnifyImageView(rateX: Float, rateY: Float) {
-        val drawable = mUpImageView.drawable
+        val drawable = binding.ivUpImage.drawable
         if (drawable is BitmapDrawable) {
             val bitmap = drawable.bitmap
-            mMagnifyImageView.visibility = View.VISIBLE
-            mMagnifyImageView.setImageBitmap(
+            binding.ivMagnifyImage.visibility = View.VISIBLE
+            binding.ivMagnifyImage.setImageBitmap(
                 cropFromOriginalBitmap(
                     bitmap,
                     rateX,
@@ -537,19 +527,19 @@ class OperationActivity : AppCompatActivity() {
             val x = motionEvent.x
             val y = motionEvent.y
 
-            if (mMagnifyImageView.translationX == 0f) {
-                if (x < mMagnifyImageView.width && y < mMagnifyImageView.height) {
-                    mMagnifyImageView.translationX =
-                        (mScreenWidth - mMagnifyImageView.width).toFloat()
+            if (binding.ivMagnifyImage.translationX == 0f) {
+                if (x < binding.ivMagnifyImage.width && y < binding.ivMagnifyImage.height) {
+                    binding.ivMagnifyImage.translationX =
+                        (mScreenWidth - binding.ivMagnifyImage.width).toFloat()
                 }
 
             } else {
-                if (x > mScreenWidth - mMagnifyImageView.width && y < mMagnifyImageView.height) {
-                    mMagnifyImageView.translationX = 0f
+                if (x > mScreenWidth - binding.ivMagnifyImage.width && y < binding.ivMagnifyImage.height) {
+                    binding.ivMagnifyImage.translationX = 0f
                 }
             }
 
-            mUpImageViewRectF = AndroidUtils.getVisibleImageRect(mUpImageView)
+            mUpImageViewRectF = AndroidUtils.getVisibleImageRect(binding.ivUpImage)
             if (mUpImageViewRectF != null && mUpImageViewRectF!!.contains(x, y)) {
                 mShowMagnifyPhotoRunnable = Runnable {
                     showMagnifyImageView(
@@ -557,7 +547,7 @@ class OperationActivity : AppCompatActivity() {
                         (y - mUpImageViewRectF!!.top) / mUpImageViewRectF!!.height()
                     )
                 }
-                mMagnifyImageView.postDelayed(mShowMagnifyPhotoRunnable, 500)
+                binding.ivMagnifyImage.postDelayed(mShowMagnifyPhotoRunnable, 500)
             }
 
         } else if (motionEvent.actionMasked == MotionEvent.ACTION_MOVE) {
@@ -572,23 +562,23 @@ class OperationActivity : AppCompatActivity() {
 
             } else {
                 //Cancel magnify
-                mMagnifyImageView.removeCallbacks(mShowMagnifyPhotoRunnable)
+                binding.ivMagnifyImage.removeCallbacks(mShowMagnifyPhotoRunnable)
             }
 
-            if (mMagnifyImageView.isVisible) {
+            if (binding.ivMagnifyImage.isVisible) {
                 //intercept, do magnify
                 val x = motionEvent.x
                 val y = motionEvent.y
 
-                if (mMagnifyImageView.translationX == 0f) {
-                    if (x < mMagnifyImageView.width && y < mMagnifyImageView.height) {
-                        mMagnifyImageView.translationX =
-                            (mScreenWidth - mMagnifyImageView.width).toFloat()
+                if (binding.ivMagnifyImage.translationX == 0f) {
+                    if (x < binding.ivMagnifyImage.width && y < binding.ivMagnifyImage.height) {
+                        binding.ivMagnifyImage.translationX =
+                            (mScreenWidth - binding.ivMagnifyImage.width).toFloat()
                     }
 
                 } else {
-                    if (x > mScreenWidth - mMagnifyImageView.width && y < mMagnifyImageView.height) {
-                        mMagnifyImageView.translationX = 0f
+                    if (x > mScreenWidth - binding.ivMagnifyImage.width && y < binding.ivMagnifyImage.height) {
+                        binding.ivMagnifyImage.translationX = 0f
                     }
                 }
 
@@ -606,11 +596,11 @@ class OperationActivity : AppCompatActivity() {
             view.translationY = translationY
             view.rotation = translationX / 40
 
-            mKeepTextView.alpha = if (isRightSwipe) max(
+            binding.tvKeep.alpha = if (isRightSwipe) max(
                 0.0,
                 (translationX / SHOW_TAG_TRANSLATE_X - 0.2f).toDouble()
             ).toFloat() else 0f
-            mDeleteTextView.alpha = if (!isRightSwipe) max(
+            binding.tvDelete.alpha = if (!isRightSwipe) max(
                 0.0,
                 (-translationX / SHOW_TAG_TRANSLATE_X - 0.2f).toDouble()
             ).toFloat() else 0f
@@ -621,32 +611,32 @@ class OperationActivity : AppCompatActivity() {
                 val scaleFactor: Float =
                     1 + (if (isRightSwipe) translationX else -translationX) / (SHOW_TAG_TRANSLATE_X * 10)
 
-                mDeleteImageView.alpha = if (isRightSwipe) alphaFactor else 1f
-                mKeepImageView.alpha = if (!isRightSwipe) alphaFactor else 1f
+                binding.ivDelete.alpha = if (isRightSwipe) alphaFactor else 1f
+                binding.ivKeep.alpha = if (!isRightSwipe) alphaFactor else 1f
 
                 if (isRightSwipe) {
-                    mKeepImageView.scaleX = scaleFactor
-                    mKeepImageView.scaleY = scaleFactor
+                    binding.ivKeep.scaleX = scaleFactor
+                    binding.ivKeep.scaleY = scaleFactor
 
                 } else {
-                    mDeleteImageView.scaleX = scaleFactor
-                    mDeleteImageView.scaleY = scaleFactor
+                    binding.ivDelete.scaleX = scaleFactor
+                    binding.ivDelete.scaleY = scaleFactor
                 }
 
             } else {
-                mDeleteImageView.alpha = if (isRightSwipe) 0f else 1f
-                mKeepImageView.alpha = if (isRightSwipe) 1f else 0f
+                binding.ivDelete.alpha = if (isRightSwipe) 0f else 1f
+                binding.ivKeep.alpha = if (isRightSwipe) 1f else 0f
             }
 
         } else if (motionEvent.actionMasked == MotionEvent.ACTION_UP || motionEvent.actionMasked == MotionEvent.ACTION_CANCEL || motionEvent.actionMasked == MotionEvent.ACTION_POINTER_UP) {
             mIsOperating = false
             if (mShowMagnifyPhotoRunnable != null) {
-                mMagnifyImageView.removeCallbacks(mShowMagnifyPhotoRunnable)
+                binding.ivMagnifyImage.removeCallbacks(mShowMagnifyPhotoRunnable)
             }
             //intercept when magnify
-            if (mMagnifyImageView.isVisible) {
-                mMagnifyImageView.visibility = View.INVISIBLE
-                mMagnifyImageView.translationX = 0f
+            if (binding.ivMagnifyImage.isVisible) {
+                binding.ivMagnifyImage.visibility = View.INVISIBLE
+                binding.ivMagnifyImage.translationX = 0f
                 return@OnTouchListener true
             }
             val translationX = motionEvent.rawX - mTouchX
@@ -655,23 +645,24 @@ class OperationActivity : AppCompatActivity() {
 
             if (absTranslationX >= SHOW_TAG_TRANSLATE_X) {
                 val scaleXAnimator = ObjectAnimator.ofFloat(
-                    mDownImageView,
+                    binding.ivDownImage,
                     View.SCALE_X,
                     DOWN_IMAGE_SCALE,
                     1f
                 )
                 val scaleYAnimator = ObjectAnimator.ofFloat(
-                    mDownImageView,
+                    binding.ivDownImage,
                     View.SCALE_Y,
                     DOWN_IMAGE_SCALE,
                     1f
                 )
                 val translateXAnimator = ObjectAnimator.ofFloat(
-                    mUpImageContainer,
+                    binding.clUpImage,
                     View.TRANSLATION_X,
                     (if (isRightSwipe) mScreenWidth else -mScreenWidth).toFloat()
                 )
-                val alphaAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ALPHA, 0f)
+                val alphaAnimator =
+                    ObjectAnimator.ofFloat(binding.clUpImage, View.ALPHA, 0f)
                 val animatorSet = AnimatorSet()
                 animatorSet.duration = MANUAL_OPERATION_ANIMATOR_DURATION
                 animatorSet.playTogether(
@@ -688,29 +679,30 @@ class OperationActivity : AppCompatActivity() {
 
                     override fun onAnimationEnd(animation: Animator) {
                         super.onAnimationEnd(animation)
-                        mDownImageView.scaleX = DOWN_IMAGE_SCALE
-                        mDownImageView.scaleY = DOWN_IMAGE_SCALE
+                        binding.ivDownImage.scaleX = DOWN_IMAGE_SCALE
+                        binding.ivDownImage.scaleY = DOWN_IMAGE_SCALE
                         doOnCompleted(if (isRightSwipe) PHOTO_OPERATION_KEEP else PHOTO_OPERATION_DELETE)
                         mIsAnimating = false
                     }
 
                     override fun onAnimationCancel(animation: Animator) {
                         super.onAnimationCancel(animation)
-                        mDownImageView.scaleX = DOWN_IMAGE_SCALE
-                        mDownImageView.scaleY = DOWN_IMAGE_SCALE
+                        binding.ivDownImage.scaleX = DOWN_IMAGE_SCALE
+                        binding.ivDownImage.scaleY = DOWN_IMAGE_SCALE
                         mIsAnimating = false
                     }
                 })
                 animatorSet.start()
 
             } else {
-                val keepAlphaAnimator = ObjectAnimator.ofFloat(mKeepTextView, View.ALPHA, 0f)
-                val deleteAlphaAnimator = ObjectAnimator.ofFloat(mDeleteTextView, View.ALPHA, 0f)
+                val keepAlphaAnimator = ObjectAnimator.ofFloat(binding.tvKeep, View.ALPHA, 0f)
+                val deleteAlphaAnimator = ObjectAnimator.ofFloat(binding.tvDelete, View.ALPHA, 0f)
                 val translateXAnimator =
-                    ObjectAnimator.ofFloat(mUpImageContainer, View.TRANSLATION_X, 0f)
+                    ObjectAnimator.ofFloat(binding.clUpImage, View.TRANSLATION_X, 0f)
                 val translateYAnimator =
-                    ObjectAnimator.ofFloat(mUpImageContainer, View.TRANSLATION_Y, 0f)
-                val rotationAnimator = ObjectAnimator.ofFloat(mUpImageContainer, View.ROTATION, 0f)
+                    ObjectAnimator.ofFloat(binding.clUpImage, View.TRANSLATION_Y, 0f)
+                val rotationAnimator =
+                    ObjectAnimator.ofFloat(binding.clUpImage, View.ROTATION, 0f)
                 val animatorSet = AnimatorSet()
                 animatorSet.duration = MANUAL_OPERATION_ANIMATOR_DURATION
                 animatorSet.playTogether(
@@ -740,16 +732,16 @@ class OperationActivity : AppCompatActivity() {
             }
 
             val deleteImageViewAlphaAnimator =
-                ObjectAnimator.ofFloat(mDeleteImageView, View.ALPHA, 1f)
+                ObjectAnimator.ofFloat(binding.ivDelete, View.ALPHA, 1f)
             val deleteImageViewScaleXAnimator =
-                ObjectAnimator.ofFloat(mDeleteImageView, View.SCALE_X, 1f)
+                ObjectAnimator.ofFloat(binding.ivDelete, View.SCALE_X, 1f)
             val deleteImageViewScaleYAnimator =
-                ObjectAnimator.ofFloat(mDeleteImageView, View.SCALE_Y, 1f)
-            val keepImageViewAlphaAnimator = ObjectAnimator.ofFloat(mKeepImageView, View.ALPHA, 1f)
+                ObjectAnimator.ofFloat(binding.ivDelete, View.SCALE_Y, 1f)
+            val keepImageViewAlphaAnimator = ObjectAnimator.ofFloat(binding.ivKeep, View.ALPHA, 1f)
             val keepImageViewScaleXAnimator =
-                ObjectAnimator.ofFloat(mKeepImageView, View.SCALE_X, 1f)
+                ObjectAnimator.ofFloat(binding.ivKeep, View.SCALE_X, 1f)
             val keepImageViewScaleYAnimator =
-                ObjectAnimator.ofFloat(mKeepImageView, View.SCALE_Y, 1f)
+                ObjectAnimator.ofFloat(binding.ivKeep, View.SCALE_Y, 1f)
             val animatorSet = AnimatorSet()
             animatorSet.duration = MANUAL_OPERATION_ANIMATOR_DURATION
             animatorSet.playTogether(
@@ -765,15 +757,15 @@ class OperationActivity : AppCompatActivity() {
 
                 override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
-                    mKeepTextView.alpha = 0f
-                    mDeleteTextView.alpha = 0f
+                    binding.tvKeep.alpha = 0f
+                    binding.tvDelete.alpha = 0f
                     mIsAnimating = false
                 }
 
                 override fun onAnimationCancel(animation: Animator) {
                     super.onAnimationCancel(animation)
-                    mKeepTextView.alpha = 0f
-                    mDeleteTextView.alpha = 0f
+                    binding.tvKeep.alpha = 0f
+                    binding.tvDelete.alpha = 0f
                     mIsAnimating = false
                 }
             })

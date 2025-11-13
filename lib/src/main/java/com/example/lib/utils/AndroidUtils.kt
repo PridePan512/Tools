@@ -1,6 +1,7 @@
 package com.example.lib.utils
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -11,14 +12,18 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.graphics.RectF
 import android.location.Geocoder
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import android.view.View
+import android.view.Window
+import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import android.webkit.MimeTypeMap
 import android.widget.ImageView
@@ -27,6 +32,7 @@ import androidx.annotation.WorkerThread
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import androidx.core.view.WindowCompat
 import androidx.exifinterface.media.ExifInterface
 import java.io.File
 import java.io.IOException
@@ -46,6 +52,70 @@ object AndroidUtils {
      */
     fun getScreenHeight(): Int {
         return Resources.getSystem().displayMetrics.heightPixels
+    }
+
+    /**
+     * 获取状态栏高度
+     */
+    @SuppressLint("InternalInsetResource")
+    fun getStatusBarHeight(activity: Activity): Int {
+        val insets = activity.window.decorView.rootWindowInsets
+
+        if (insets != null) {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                insets.getInsets(WindowInsets.Type.statusBars()).top
+            } else {
+                @Suppress("DEPRECATION")
+                insets.systemWindowInsetTop
+            }
+        }
+
+        // 如果 insets 为 null，则 fallback 用资源 ID
+        val resId = activity.resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resId > 0) {
+            activity.resources.getDimensionPixelSize(resId)
+        } else {
+            0
+        }
+    }
+
+    /**
+     * 获取导航栏高度
+     */
+    @SuppressLint("InternalInsetResource")
+    fun getNavigationBarHeight(activity: Activity): Int {
+        val insets = activity.window.decorView.rootWindowInsets
+
+        if (insets != null) {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // 在 API 30 (Android 11) 及更高版本，使用 WindowInsets 的 navigationBars 类型
+                insets.getInsets(WindowInsets.Type.navigationBars()).bottom
+            } else {
+                @Suppress("DEPRECATION")
+                insets.systemWindowInsetBottom
+            }
+        }
+
+        // 如果 insets 为 null，则 fallback 使用资源 ID 获取导航栏高度
+        val resId = activity.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+        return if (resId > 0) {
+            activity.resources.getDimensionPixelSize(resId)
+        } else {
+            0
+        }
+    }
+
+    /**
+     * 设置导航栏透明
+     */
+    fun setNavigationBarTransparent(window: Window, isLightNaviBar: Boolean) {
+        window.navigationBarColor = Color.TRANSPARENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.setNavigationBarContrastEnforced(false)
+        }
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightNavigationBars = isLightNaviBar
+        }
     }
 
     /**

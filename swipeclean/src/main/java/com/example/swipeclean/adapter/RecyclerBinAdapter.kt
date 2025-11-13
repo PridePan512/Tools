@@ -1,13 +1,13 @@
 package com.example.swipeclean.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.swipeclean.model.Image
 import com.example.tools.R
+import com.example.tools.databinding.GridItemRecyclebinBinding
 
 class RecyclerBinAdapter(
     val images: MutableList<Image>,
@@ -19,10 +19,7 @@ class RecyclerBinAdapter(
         parent: ViewGroup,
         viewType: Int
     ): MyViewHolder {
-        val view =
-            LayoutInflater.from(parent.context)
-                .inflate(R.layout.grid_item_recyclebin, parent, false)
-        return MyViewHolder(view)
+        return MyViewHolder(GridItemRecyclebinBinding.inflate(LayoutInflater.from(parent.context), parent, false))
     }
 
     override fun onBindViewHolder(
@@ -32,16 +29,16 @@ class RecyclerBinAdapter(
         val image = images[position]
 
         Glide
-            .with(holder.itemView.context)
+            .with(holder.binding.root.context)
             .load(image.sourceUri)
             .placeholder(R.drawable.ic_vector_image)
-            .into(holder.coverImageView)
+            .into(holder.binding.ivCover)
 
-        holder.keepView.setOnClickListener {
+        holder.binding.ivKeep.setOnClickListener {
             onItemRestoreClick.invoke(image, holder.bindingAdapterPosition)
         }
-        holder.itemView.setOnClickListener {
-            onItemClick.invoke(holder.coverImageView, image, holder.bindingAdapterPosition)
+        holder.binding.root.setOnClickListener {
+            onItemClick.invoke(holder.binding.ivCover, image, holder.bindingAdapterPosition)
         }
     }
 
@@ -57,8 +54,5 @@ class RecyclerBinAdapter(
         return images.sumOf { item -> item.size }
     }
 
-    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val coverImageView: ImageView = itemView.findViewById(R.id.iv_cover)
-        val keepView: ImageView = itemView.findViewById(R.id.iv_keep)
-    }
+    class MyViewHolder(val binding: GridItemRecyclebinBinding) : RecyclerView.ViewHolder(binding.root)
 }

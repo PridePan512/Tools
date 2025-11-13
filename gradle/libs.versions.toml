@@ -16,6 +16,7 @@ eventbus = "3.3.1"
 io = "2.6"
 compress = "1.24.0"
 jackson = "2.11.1"
+lifecycleViewModel = "2.9.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,6 +36,7 @@ commons-io = { group = "commons-io", name = "commons-io", version.ref = "io" }
 org-apache-commons = { group = "org.apache.commons", name = "commons-compress", version.ref = "compress" }
 jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson" }
 jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson" }
+lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewModel" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

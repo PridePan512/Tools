@@ -13,7 +13,7 @@
         android:paddingHorizontal="20dp">
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/v_cover"
+            android:id="@+id/cv_cover"
             android:layout_width="80dp"
             android:layout_height="80dp"
             app:cardCornerRadius="8dp"
@@ -55,7 +55,7 @@
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@id/tv_progress"
-            app:layout_constraintStart_toEndOf="@id/v_cover"
+            app:layout_constraintStart_toEndOf="@id/cv_cover"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
             tools:text="November , 2024" />
@@ -67,13 +67,13 @@
             android:layout_marginTop="12dp"
             android:textColor="@color/text_sub"
             android:textSize="14sp"
-            app:layout_constraintBottom_toTopOf="@id/lp_progress"
+            app:layout_constraintBottom_toTopOf="@id/lpi_clean"
             app:layout_constraintStart_toStartOf="@id/tv_date"
             app:layout_constraintTop_toBottomOf="@id/tv_date"
             tools:text="0/615 items" />
 
         <com.example.swipeclean.view.DualProgressIndicator
-            android:id="@+id/lp_progress"
+            android:id="@+id/lpi_clean"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

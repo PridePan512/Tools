@@ -1,23 +1,23 @@
 package com.example.swipeclean.activity
 
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.View
-import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.lib.mvvm.BaseActivity
+import com.example.lib.utils.AndroidUtils
 import com.example.lib.utils.PermissionUtils
 import com.example.lib.utils.StringUtils
 import com.example.swipeclean.adapter.AlbumAdapter
@@ -27,24 +27,16 @@ import com.example.swipeclean.dialog.SortDialogFragment
 import com.example.swipeclean.model.Album
 import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
 import com.example.swipeclean.other.Constants.MIN_SHOW_LOADING_TIME
+import com.example.swipeclean.viewmodel.MainViewModel
 import com.example.tools.R
-import com.google.android.material.button.MaterialButton
+import com.example.tools.databinding.ActivityMainBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var mRecyclerView: RecyclerView
-    private lateinit var mContentView: View
-    private lateinit var mAlbumsView: View
-    private lateinit var mEmptyView: View
-    private lateinit var mCompletedTextView: TextView
-    private lateinit var mCleanedTextView: TextView
-    private lateinit var mSortButton: MaterialButton
+class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>() {
     private lateinit var mAdapter: AlbumAdapter
-    private lateinit var mLoadingView: View
     private val mPermissionLauncher1: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             initData()
@@ -68,13 +60,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
         if (PermissionUtils.checkReadImagePermission(this)) {
             lifecycleScope.launch(Dispatchers.IO) {
@@ -82,11 +67,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        initView()
+        initData()
+    }
+
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+            insets
+        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        if (mLoadingView.isVisible) {
+        if (binding.vLoading.isVisible) {
             return true
         }
         return super.dispatchTouchEvent(ev)
@@ -95,20 +89,7 @@ class MainActivity : AppCompatActivity() {
     fun onChangeSort() {
         sortAlbums(mAdapter.albums)
         mAdapter.notifyDataSetChanged()
-        mRecyclerView.scrollToPosition(0)
-    }
-
-    private fun initView() {
-        mRecyclerView = findViewById(R.id.v_recyclerview)
-        mContentView = findViewById(R.id.v_content)
-        mEmptyView = findViewById(R.id.v_empty)
-        mCompletedTextView = findViewById(R.id.tv_completed_content)
-        mCleanedTextView = findViewById(R.id.tv_cleaned_content)
-        mSortButton = findViewById(R.id.btn_sort_order)
-        mAlbumsView = findViewById(R.id.v_albums)
-        mLoadingView = findViewById(R.id.v_loading)
-
-        initData()
+        binding.rvAlbums.scrollToPosition(0)
     }
 
     private fun initData() {
@@ -132,34 +113,34 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        mLoadingView.visibility = View.VISIBLE
+        binding.vLoading.visibility = View.VISIBLE
         lifecycleScope.launch(Dispatchers.IO) {
             val startTime = SystemClock.elapsedRealtime()
             val albums = AlbumController.loadAlbums()
 
             runOnUiThread {
                 val spendTime = SystemClock.elapsedRealtime() - startTime
-                mRecyclerView.postDelayed(
+                binding.rvAlbums.postDelayed(
                     {
-                        mLoadingView.visibility = View.GONE
+                        binding.vLoading.visibility = View.GONE
                         if (albums.isEmpty()) {
-                            mEmptyView.visibility = View.VISIBLE
-                            mAlbumsView.visibility = View.GONE
-                            mSortButton.visibility = View.GONE
+                            binding.clEmpty.visibility = View.VISIBLE
+                            binding.clAlbums.visibility = View.GONE
+                            binding.btnSortOrder.visibility = View.GONE
 
                         } else {
-                            mSortButton.visibility = View.VISIBLE
-                            mEmptyView.visibility = View.GONE
-                            mAlbumsView.visibility = View.VISIBLE
+                            binding.btnSortOrder.visibility = View.VISIBLE
+                            binding.clEmpty.visibility = View.GONE
+                            binding.clAlbums.visibility = View.VISIBLE
 
-                            mCleanedTextView.text =
+                            binding.tvCleanedContent.text =
                                 StringUtils.getHumanFriendlyByteCount(
                                     ConfigHost.getCleanedSize(
                                         this@MainActivity
                                     ), 1
                                 )
 
-                            mCompletedTextView.text =
+                            binding.tvCompletedContent.text =
                                 String.format(
                                     Locale.getDefault(),
                                     "%d/%d",
@@ -181,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                                                         .find { it.getId() == albumId }
 
                                                 if (album?.images?.isNotEmpty() == true) {
-                                                    mLoadingView.visibility = View.VISIBLE
+                                                    binding.vLoading.visibility = View.VISIBLE
                                                     val startTime = SystemClock.elapsedRealtime()
 
                                                     lifecycleScope.launch(Dispatchers.IO) {
@@ -203,9 +184,9 @@ class MainActivity : AppCompatActivity() {
                                                             )
                                                             val spendTime =
                                                                 SystemClock.elapsedRealtime() - startTime
-                                                            mRecyclerView.postDelayed(
+                                                            binding.rvAlbums.postDelayed(
                                                                 {
-                                                                    mLoadingView.visibility =
+                                                                    binding.vLoading.visibility =
                                                                         View.GONE
                                                                     mOperationLauncher.launch(intent)
                                                                 }, MIN_SHOW_LOADING_TIME - spendTime
@@ -227,9 +208,25 @@ class MainActivity : AppCompatActivity() {
                                 }
                             mAdapter.setHasStableIds(true)
 
-                            mRecyclerView.setHasFixedSize(true)
-                            mRecyclerView.setLayoutManager(LinearLayoutManager(this@MainActivity))
-                            mRecyclerView.setAdapter(mAdapter)
+                            binding.rvAlbums.addItemDecoration(object :
+                                RecyclerView.ItemDecoration() {
+                                override fun getItemOffsets(
+                                    outRect: Rect,
+                                    view: View,
+                                    parent: RecyclerView,
+                                    state: RecyclerView.State
+                                ) {
+                                    super.getItemOffsets(outRect, view, parent, state)
+                                    if (parent.getChildAdapterPosition(view) == mAdapter.itemCount - 1) {
+                                        outRect.bottom =
+                                            AndroidUtils.getNavigationBarHeight(this@MainActivity)
+                                    }
+                                }
+                            })
+
+                            binding.rvAlbums.setHasFixedSize(true)
+                            binding.rvAlbums.setLayoutManager(LinearLayoutManager(this@MainActivity))
+                            binding.rvAlbums.setAdapter(mAdapter)
 
                             findViewById<View>(R.id.btn_sort_order).setOnClickListener {
                                 SortDialogFragment.newInstance()
