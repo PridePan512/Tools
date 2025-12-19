@@ -17,10 +17,10 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -30,45 +30,25 @@ import com.example.lib.utils.AndroidUtils
 import com.example.lib.utils.PermissionUtils
 import com.example.lib.utils.StringUtils.getHumanFriendlyByteCount
 import com.example.swipeclean.adapter.RecyclerBinAdapter
-import com.example.swipeclean.business.AlbumController
-import com.example.swipeclean.business.ConfigHost
-import com.example.swipeclean.model.Album
 import com.example.swipeclean.model.Image
 import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
 import com.example.swipeclean.other.Constants.MIN_SHOW_LOADING_TIME
+import com.example.swipeclean.viewmodel.RecyclerBinViewModel
 import com.example.tools.R
 import com.example.tools.databinding.ActivityRecycleBinBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.util.Collections
 
 class RecycleBinActivity : BaseActivity<ActivityRecycleBinBinding>(), PhotoViewFragment.Listener {
     private lateinit var mAdapter: RecyclerBinAdapter
-    private var mAlbum: Album? = null
+    private val mRecyclerBinViewModel: RecyclerBinViewModel by viewModels()
+    private var mStartRestoreTime = 0L
 
-    private val newDeleteLauncher =
+    private val mNewDeleteLauncher =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 binding.vLoading.visibility = View.VISIBLE
-                lifecycleScope.launch(Dispatchers.IO) {
-                    ConfigHost.setCleanedSize(
-                        mAdapter.getTotalSize(),
-                        this@RecycleBinActivity
-                    )
-                    mAdapter.images.let {
-                        AlbumController.cleanCompletedImage(it)
-                        mAlbum?.images?.removeAll(it)
-                    }
-
-                    delay(MIN_SHOW_LOADING_TIME)
-
-                    runOnUiThread {
-                        binding.vLoading.visibility = View.GONE
-                        showDeleteResult()
-                    }
-                }
+                mRecyclerBinViewModel.cleanCompletedImages(mAdapter, this@RecycleBinActivity)
             }
         }
 
@@ -89,13 +69,11 @@ class RecycleBinActivity : BaseActivity<ActivityRecycleBinBinding>(), PhotoViewF
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        initView()
+        init()
 
-        mAlbum = AlbumController.getAlbums().find { item ->
-            item.getId() == intent.getLongExtra(KEY_INTENT_ALBUM_ID, 0)
-        }
+        mRecyclerBinViewModel.initAlbum(intent.getLongExtra(KEY_INTENT_ALBUM_ID, 0))
 
-        showDeletedPhotos(mAlbum?.images?.filter { item -> item.isDelete() })
+        showDeletedImages(mRecyclerBinViewModel.getAlbum()?.images?.filter { item -> item.isDelete() })
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -147,11 +125,29 @@ class RecycleBinActivity : BaseActivity<ActivityRecycleBinBinding>(), PhotoViewF
         }
     }
 
-    private fun initView() {
+    private fun init() {
         binding.ivBack.setOnClickListener { finish() }
+
+        mRecyclerBinViewModel.cleanCompletedLiveData.observe(this) {
+            binding.vLoading.visibility = View.GONE
+            showDeleteResult()
+        }
+
+        mRecyclerBinViewModel.restoreImageLiveData.observe(this) {
+            mAdapter.images.forEach { it.doKeep() }
+
+            val spendTime = SystemClock.elapsedRealtime() - mStartRestoreTime
+            binding.vLoading.postDelayed(
+                {
+                    binding.vLoading.visibility = View.GONE
+                    finish()
+                },
+                MIN_SHOW_LOADING_TIME - spendTime
+            )
+        }
     }
 
-    private fun showDeletedPhotos(deletedImages: List<Image>?) {
+    private fun showDeletedImages(deletedImages: List<Image>?) {
         if (deletedImages.isNullOrEmpty()) {
             finish()
             return
@@ -159,14 +155,12 @@ class RecycleBinActivity : BaseActivity<ActivityRecycleBinBinding>(), PhotoViewF
         Collections.reverse(deletedImages)
         mAdapter = RecyclerBinAdapter(
             deletedImages.toMutableList(),
-            { photo, position ->
+            { image, position ->
                 mAdapter.notifyItemRemoved(position)
-                mAdapter.removeImage(photo)
+                mAdapter.removeImage(image)
                 showTotalSize(mAdapter.getTotalSize())
-                photo.doKeep()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    AlbumController.converseDeleteToKeepImage(photo)
-                }
+                image.doKeep()
+                mRecyclerBinViewModel.converseDeleteToKeepImage(image)
 
                 if (mAdapter.images.isEmpty()) {
                     finish()
@@ -216,7 +210,7 @@ class RecycleBinActivity : BaseActivity<ActivityRecycleBinBinding>(), PhotoViewF
                     .show()
 
             } else {
-                newDeleteLauncher.launch(
+                mNewDeleteLauncher.launch(
                     IntentSenderRequest.Builder(
                         MediaStore.createDeleteRequest(
                             contentResolver,
@@ -228,26 +222,11 @@ class RecycleBinActivity : BaseActivity<ActivityRecycleBinBinding>(), PhotoViewF
 
         binding.btnRestoreAll.setOnClickListener {
             binding.vLoading.visibility = View.VISIBLE
-            val startTime = SystemClock.elapsedRealtime()
+            mStartRestoreTime = SystemClock.elapsedRealtime()
             showTotalSize(0)
             binding.rvPhotos.visibility = View.GONE
-            lifecycleScope.launch(Dispatchers.IO) {
-                mAdapter.images.let { photos ->
-                    AlbumController.converseDeleteToKeepImage(photos)
-                    photos.forEach { it.doKeep() }
-                }
 
-                runOnUiThread {
-                    val spendTime = SystemClock.elapsedRealtime() - startTime
-                    binding.vLoading.postDelayed(
-                        {
-                            binding.vLoading.visibility = View.GONE
-                            finish()
-                        },
-                        MIN_SHOW_LOADING_TIME - spendTime
-                    )
-                }
-            }
+            mRecyclerBinViewModel.converseDeleteToKeepImage(mAdapter.images)
         }
     }
 
@@ -263,7 +242,7 @@ class RecycleBinActivity : BaseActivity<ActivityRecycleBinBinding>(), PhotoViewF
         findViewById<View>(R.id.cl_trash_bin).visibility = View.GONE
         findViewById<View>(R.id.cl_complete).visibility = View.VISIBLE
 
-        binding.tvTitle.text = mAlbum?.formatData
+        binding.tvTitle.text = mRecyclerBinViewModel.getAlbum()?.formatData
         findViewById<View>(R.id.btn_got_it).setOnClickListener { finish() }
     }
 
@@ -274,26 +253,10 @@ class RecycleBinActivity : BaseActivity<ActivityRecycleBinBinding>(), PhotoViewF
 
     private fun useOldDelete() {
         binding.vLoading.visibility = View.VISIBLE
-        lifecycleScope.launch(Dispatchers.IO) {
-            ConfigHost.setCleanedSize(
-                mAdapter.getTotalSize(),
-                this@RecycleBinActivity
-            )
-
-            mAdapter.images.let { deletePhotos ->
-                AlbumController.cleanCompletedImage(deletePhotos)
-                mAlbum?.images?.removeAll(deletePhotos)
-
-                deletePhotos
-                    .mapNotNull { it.sourceUri }
-                    .forEach { contentResolver.delete(it, null, null) }
-            }
-            delay(MIN_SHOW_LOADING_TIME)
-
-            runOnUiThread {
-                binding.vLoading.visibility = View.GONE
-                showDeleteResult()
-            }
-        }
+        mRecyclerBinViewModel.cleanCompletedImagesUseOld(
+            mAdapter,
+            this@RecycleBinActivity,
+            contentResolver
+        )
     }
 }

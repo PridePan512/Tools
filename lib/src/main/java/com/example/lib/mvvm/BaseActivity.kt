@@ -19,7 +19,7 @@ abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity() {
         binding = getViewBinding()
         setContentView(binding.root)
 
-        AndroidUtils.setNavigationBarTransparent(window, true)
+        AndroidUtils.setNavigationBarTransparent(window)
     }
 
     /**
@@ -28,7 +28,8 @@ abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity() {
     @Suppress("UNCHECKED_CAST")
     private fun getViewBinding(): VB {
         // 获取泛型中 ViewBinding 的类型
-        val type = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<VB>
+        val type =
+            (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<VB>
         // 调用静态方法 inflate(LayoutInflater)
         val inflateMethod = type.getMethod("inflate", LayoutInflater::class.java)
         return inflateMethod.invoke(null, layoutInflater) as VB

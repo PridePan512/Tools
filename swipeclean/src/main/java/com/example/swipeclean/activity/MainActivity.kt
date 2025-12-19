@@ -10,10 +10,10 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.lib.mvvm.BaseActivity
@@ -27,11 +27,10 @@ import com.example.swipeclean.dialog.SortDialogFragment
 import com.example.swipeclean.model.Album
 import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
 import com.example.swipeclean.other.Constants.MIN_SHOW_LOADING_TIME
+import com.example.swipeclean.viewmodel.MainViewModel
 import com.example.tools.R
 import com.example.tools.databinding.ActivityMainBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.Locale
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
@@ -57,13 +56,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
         }
 
+    private val mViewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         if (PermissionUtils.checkReadImagePermission(this)) {
-            lifecycleScope.launch(Dispatchers.IO) {
-                AlbumController.syncDatabase()
-            }
+            mViewModel.syncDatabase()
         }
 
         initData()
@@ -86,7 +85,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     fun onChangeSort() {
-        sortAlbums(mAdapter.albums)
+        mViewModel.sortAlbums(mAdapter.albums,ConfigHost.getSortType(this))
         mAdapter.notifyDataSetChanged()
         binding.rvAlbums.scrollToPosition(0)
     }
@@ -113,166 +112,125 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         binding.vLoading.visibility = View.VISIBLE
-        lifecycleScope.launch(Dispatchers.IO) {
-            val startTime = SystemClock.elapsedRealtime()
-            val albums = AlbumController.loadAlbums()
 
-            runOnUiThread {
-                val spendTime = SystemClock.elapsedRealtime() - startTime
-                binding.rvAlbums.postDelayed(
-                    {
-                        binding.vLoading.visibility = View.GONE
-                        if (albums.isEmpty()) {
-                            binding.clEmpty.visibility = View.VISIBLE
-                            binding.clAlbums.visibility = View.GONE
-                            binding.btnSortOrder.visibility = View.GONE
+        val startTime = SystemClock.elapsedRealtime()
+        mViewModel.loadAlbums()
+        mViewModel.albumsLiveData.observe(this) { albums ->
+            val spendTime = SystemClock.elapsedRealtime() - startTime
+            binding.rvAlbums.postDelayed(
+                {
+                    binding.vLoading.visibility = View.GONE
+                    if (albums.isEmpty()) {
+                        binding.clEmpty.visibility = View.VISIBLE
+                        binding.clAlbums.visibility = View.GONE
+                        binding.btnSortOrder.visibility = View.GONE
 
-                        } else {
-                            binding.btnSortOrder.visibility = View.VISIBLE
-                            binding.clEmpty.visibility = View.GONE
-                            binding.clAlbums.visibility = View.VISIBLE
+                    } else {
+                        binding.btnSortOrder.visibility = View.VISIBLE
+                        binding.clEmpty.visibility = View.GONE
+                        binding.clAlbums.visibility = View.VISIBLE
 
-                            binding.tvCleanedContent.text =
-                                StringUtils.getHumanFriendlyByteCount(
-                                    ConfigHost.getCleanedSize(
-                                        this@MainActivity
-                                    ), 1
-                                )
+                        binding.tvCleanedContent.text =
+                            StringUtils.getHumanFriendlyByteCount(
+                                ConfigHost.getCleanedSize(
+                                    this@MainActivity
+                                ), 1
+                            )
 
-                            binding.tvCompletedContent.text =
-                                String.format(
-                                    Locale.getDefault(),
-                                    "%d/%d",
-                                    albums.stream().filter(Album::isCompleted).count(),
-                                    albums.size
-                                )
+                        binding.tvCompletedContent.text =
+                            String.format(
+                                Locale.getDefault(),
+                                "%d/%d",
+                                albums.stream().filter(Album::isCompleted).count(),
+                                albums.size
+                            )
 
-                            mAdapter =
-                                AlbumAdapter(sortAlbums(albums)) { albumId, albumFormatDate, completed ->
-                                    if (completed) {
-                                        MaterialAlertDialogBuilder(this@MainActivity)
-                                            .setTitle(albumFormatDate)
-                                            .setMessage(R.string.dialog_clean_album_again_message)
-                                            .setCancelable(false)
-                                            .setNegativeButton(R.string.cancel) { dialog, which -> }
-                                            .setPositiveButton(R.string.clean) { dialog, which ->
-                                                val album: Album? =
-                                                    AlbumController.getAlbums()
-                                                        .find { it.getId() == albumId }
+                        initAlbumsAdapter(albums)
 
-                                                if (album?.images?.isNotEmpty() == true) {
-                                                    binding.vLoading.visibility = View.VISIBLE
-                                                    val startTime = SystemClock.elapsedRealtime()
-
-                                                    lifecycleScope.launch(Dispatchers.IO) {
-                                                        album.images.let { photos ->
-                                                            AlbumController.cleanCompletedImage(
-                                                                photos
-                                                            )
-                                                            photos.forEach { it.cancelOperated() }
-                                                        }
-
-                                                        runOnUiThread {
-                                                            val intent = Intent(
-                                                                this@MainActivity,
-                                                                OperationActivity::class.java
-                                                            )
-                                                            intent.putExtra(
-                                                                KEY_INTENT_ALBUM_ID,
-                                                                albumId
-                                                            )
-                                                            val spendTime =
-                                                                SystemClock.elapsedRealtime() - startTime
-                                                            binding.rvAlbums.postDelayed(
-                                                                {
-                                                                    binding.vLoading.visibility =
-                                                                        View.GONE
-                                                                    mOperationLauncher.launch(intent)
-                                                                }, MIN_SHOW_LOADING_TIME - spendTime
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            .show()
-
-                                    } else {
-                                        val intent = Intent(
-                                            this@MainActivity,
-                                            if (isAlbumOperated(albumId)) RecycleBinActivity::class.java else OperationActivity::class.java
-                                        )
-                                        intent.putExtra(KEY_INTENT_ALBUM_ID, albumId)
-                                        mOperationLauncher.launch(intent)
-                                    }
+                        //为了让最后一项不被导航栏遮挡
+                        binding.rvAlbums.addItemDecoration(object :
+                            RecyclerView.ItemDecoration() {
+                            override fun getItemOffsets(
+                                outRect: Rect,
+                                view: View,
+                                parent: RecyclerView,
+                                state: RecyclerView.State
+                            ) {
+                                super.getItemOffsets(outRect, view, parent, state)
+                                if (parent.getChildAdapterPosition(view) == mAdapter.itemCount - 1) {
+                                    outRect.bottom =
+                                        AndroidUtils.getNavigationBarHeight(this@MainActivity)
                                 }
-                            mAdapter.setHasStableIds(true)
+                            }
+                        })
 
-                            //为了让最后一项不被导航栏遮挡
-                            binding.rvAlbums.addItemDecoration(object :
-                                RecyclerView.ItemDecoration() {
-                                override fun getItemOffsets(
-                                    outRect: Rect,
-                                    view: View,
-                                    parent: RecyclerView,
-                                    state: RecyclerView.State
-                                ) {
-                                    super.getItemOffsets(outRect, view, parent, state)
-                                    if (parent.getChildAdapterPosition(view) == mAdapter.itemCount - 1) {
-                                        outRect.bottom =
-                                            AndroidUtils.getNavigationBarHeight(this@MainActivity)
-                                    }
+                        binding.rvAlbums.setHasFixedSize(true)
+                        binding.rvAlbums.setLayoutManager(LinearLayoutManager(this@MainActivity))
+                        binding.rvAlbums.setAdapter(mAdapter)
+
+                        findViewById<View>(R.id.btn_sort_order).setOnClickListener {
+                            SortDialogFragment.newInstance()
+                                .show(supportFragmentManager, "SortDialogFragment")
+                        }
+                    }
+                },
+                MIN_SHOW_LOADING_TIME - spendTime
+            )
+
+        }
+    }
+
+    private fun initAlbumsAdapter(albums: ArrayList<Album>) {
+        mAdapter =
+            AlbumAdapter(mViewModel.sortAlbums(albums, ConfigHost.getSortType(this))) { albumId, albumFormatDate, completed ->
+                if (completed) {
+                    MaterialAlertDialogBuilder(this@MainActivity)
+                        .setTitle(albumFormatDate)
+                        .setMessage(R.string.dialog_clean_album_again_message)
+                        .setCancelable(false)
+                        .setNegativeButton(R.string.cancel) { dialog, which -> }
+                        .setPositiveButton(R.string.clean) { dialog, which ->
+                            val album: Album? =
+                                AlbumController.getAlbums()
+                                    .find { it.getId() == albumId }
+
+                            if (album?.images?.isNotEmpty() == true) {
+                                binding.vLoading.visibility = View.VISIBLE
+
+                                val startTime = SystemClock.elapsedRealtime()
+                                mViewModel.reCleanAlbums(album)
+                                mViewModel.reCleanAlbumsLiveData.observe(this) {
+                                    val intent = Intent(
+                                        this@MainActivity,
+                                        OperationActivity::class.java
+                                    )
+                                    intent.putExtra(
+                                        KEY_INTENT_ALBUM_ID,
+                                        albumId
+                                    )
+                                    val spendTime =
+                                        SystemClock.elapsedRealtime() - startTime
+                                    binding.rvAlbums.postDelayed(
+                                        {
+                                            binding.vLoading.visibility =
+                                                View.GONE
+                                            mOperationLauncher.launch(intent)
+                                        }, MIN_SHOW_LOADING_TIME - spendTime
+                                    )
                                 }
-                            })
-
-                            binding.rvAlbums.setHasFixedSize(true)
-                            binding.rvAlbums.setLayoutManager(LinearLayoutManager(this@MainActivity))
-                            binding.rvAlbums.setAdapter(mAdapter)
-
-                            findViewById<View>(R.id.btn_sort_order).setOnClickListener {
-                                SortDialogFragment.newInstance()
-                                    .show(supportFragmentManager, "SortDialogFragment")
                             }
                         }
-                    },
-                    MIN_SHOW_LOADING_TIME - spendTime
-                )
+                        .show()
+
+                } else {
+                    val intent = Intent(
+                        this@MainActivity,
+                        if (mViewModel.isAlbumOperated(albumId)) RecycleBinActivity::class.java else OperationActivity::class.java
+                    )
+                    intent.putExtra(KEY_INTENT_ALBUM_ID, albumId)
+                    mOperationLauncher.launch(intent)
+                }
             }
-        }
-    }
-
-    private fun sortAlbums(albums: ArrayList<Album>): ArrayList<Album> {
-        when (ConfigHost.getSortType(this)) {
-            SortDialogFragment.DATE_DOWN -> {
-                albums.sortByDescending(Album::getDateTime)
-            }
-
-            SortDialogFragment.DATE_UP -> {
-                albums.sortBy(Album::getDateTime)
-            }
-
-            SortDialogFragment.SIZE_DOWN -> {
-                albums.sortByDescending(Album::getTotalCount)
-            }
-
-            SortDialogFragment.SIZE_UP -> {
-                albums.sortBy(Album::getTotalCount)
-            }
-
-            SortDialogFragment.UNFINISHED_DOWN -> {
-                albums.sortBy(Album::isOperated)
-            }
-
-            SortDialogFragment.UNFINISHED_UP -> {
-                albums.sortByDescending(Album::isOperated)
-            }
-        }
-        return albums
-    }
-
-    private fun isAlbumOperated(albumId: Long): Boolean {
-        val album = AlbumController.getAlbums()
-            .find { it.getId() == albumId }
-
-        return album?.images.isNullOrEmpty() || album.isOperated()
+        mAdapter.setHasStableIds(true)
     }
 }

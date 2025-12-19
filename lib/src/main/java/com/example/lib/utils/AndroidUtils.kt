@@ -106,11 +106,17 @@ object AndroidUtils {
     /**
      * 设置导航栏透明
      */
-    fun setNavigationBarTransparent(window: Window, isLightNaviBar: Boolean) {
+    fun setNavigationBarTransparent(window: Window) {
         window.navigationBarColor = Color.TRANSPARENT
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.setNavigationBarContrastEnforced(false)
         }
+    }
+
+    /**
+     * 设置导航栏是否为亮色
+     */
+    fun setNavigationBarLight(window: Window,isLightNaviBar: Boolean) {
         WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightNavigationBars = isLightNaviBar
         }
@@ -126,7 +132,7 @@ object AndroidUtils {
     /**
      * 获取图片在imageview中的真实显示区域
      */
-    fun getVisibleImageRect(imageView: ImageView): RectF? {
+    fun getVisibleRectInImageView(imageView: ImageView): RectF? {
         val drawable = imageView.drawable ?: return null
         val drawableRect =
             RectF(0f, 0f, drawable.intrinsicWidth.toFloat(), drawable.intrinsicHeight.toFloat())
@@ -297,7 +303,6 @@ object AndroidUtils {
         intent.data = url?.toUri()
         context.startActivity(intent)
     }
-
 
     /**
      * 根据图片的uri获取经纬度信息

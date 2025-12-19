@@ -18,23 +18,20 @@ import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.activity.viewModels
 import androidx.core.graphics.createBitmap
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
 import com.example.lib.mvvm.BaseActivity
 import com.example.lib.utils.AndroidUtils
-import com.example.swipeclean.business.AlbumController
-import com.example.swipeclean.model.Album
 import com.example.swipeclean.model.Image
 import com.example.swipeclean.other.Constants.KEY_INTENT_ALBUM_ID
+import com.example.swipeclean.viewmodel.OperationViewModel
 import com.example.tools.R
 import com.example.tools.databinding.ActivityOperationBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
@@ -60,7 +57,7 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
     private var mIsAnimating = false
     private var mIsOperating = false
     private var mScreenWidth: Int = 0
-    private var mAlbum: Album? = null
+    private val mOperationViewModel: OperationViewModel by viewModels()
 
     private val mRecycleBinLauncher = registerForActivityResult(
         StartActivityForResult()
@@ -92,7 +89,7 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
 
     override fun finish() {
         val intent = Intent()
-        intent.putExtra(KEY_INTENT_ALBUM_ID, mAlbum?.getId() ?: 0L)
+        intent.putExtra(KEY_INTENT_ALBUM_ID, mOperationViewModel.getAlbum()?.getId() ?: 0L)
         setResult(RESULT_OK, intent)
         super.finish()
     }
@@ -113,9 +110,7 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
         binding.ivDownImage.scaleY = DOWN_IMAGE_SCALE
         binding.btnTrash.isEnabled = false
 
-        mAlbum = AlbumController.getAlbums().find { item ->
-            item.getId() == intent.getLongExtra(KEY_INTENT_ALBUM_ID, 0)
-        }
+        mOperationViewModel.initAlbum(intent.getLongExtra(KEY_INTENT_ALBUM_ID, 0))
 
         refreshTitle()
         refreshTrashButton()
@@ -135,7 +130,7 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
     }
 
     private fun setPhotos() {
-        mAlbum?.let {
+        mOperationViewModel.getAlbum()?.let {
             setPhoto(binding.ivUpImage, it.images[it.getOperatedIndex()])
             val nextIndex = it.getOperatedIndex() + 1
             if (nextIndex == it.getTotalCount()) {
@@ -159,7 +154,7 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
     }
 
     private fun refreshTitle() {
-        mAlbum?.let {
+        mOperationViewModel.getAlbum()?.let {
             binding.tvDate.text = it.formatData
             val completeCount: Int = it.getOperatedIndex()
             binding.tvCount.text =
@@ -174,7 +169,7 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
     }
 
     private fun refreshTrashButton() {
-        mAlbum?.let {
+        mOperationViewModel.getAlbum()?.let {
             val deleteCount: Int =
                 it.images.stream().filter { item -> item.isDelete() }.count().toInt()
             binding.btnTrash.isEnabled = deleteCount != 0
@@ -191,12 +186,12 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
             this,
             RecycleBinActivity::class.java
         )
-        intent.putExtra(KEY_INTENT_ALBUM_ID, mAlbum?.getId())
+        intent.putExtra(KEY_INTENT_ALBUM_ID, mOperationViewModel.getAlbum()?.getId())
         mRecycleBinLauncher.launch(intent)
     }
 
     private fun startKeepPhoto() {
-        if (mIsOperating || mAlbum?.isOperated() == true) {
+        if (mIsOperating || mOperationViewModel.getAlbum()?.isOperated() == true) {
             return
         }
         binding.tvKeep.alpha = 1f
@@ -263,7 +258,7 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
     }
 
     private fun startDeletePhoto() {
-        if (mIsOperating || mAlbum?.isOperated() == true) {
+        if (mIsOperating || mOperationViewModel.getAlbum()?.isOperated() == true) {
             return
         }
         binding.tvDelete.alpha = 1f
@@ -335,7 +330,7 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
         var lastImage: Image? = null
         var currentImage: Image? = null
 
-        mAlbum?.apply {
+        mOperationViewModel.getAlbum()?.apply {
             lastImage = images[getOperatedIndex() - 1]
             currentImage = images[getOperatedIndex()]
         }
@@ -413,47 +408,16 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
     }
 
     private fun doOnCompleted(operationType: Int) {
-        var image: Image? = null
-        mAlbum?.apply {
-            image =
-                if (operationType == PHOTO_OPERATION_CANCEL) images[getOperatedIndex() - 1] else images[getOperatedIndex()]
-        }
 
-        if (image == null) {
-            return
-        }
+        mOperationViewModel.doOnCompleted(operationType)
 
-        when (operationType) {
-            PHOTO_OPERATION_CANCEL -> {
-                image.cancelOperated()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    AlbumController.cleanCompletedImage(image)
-                }
-                refreshTrashButton()
-            }
-
-            PHOTO_OPERATION_KEEP -> {
-                image.doKeep()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    AlbumController.addImage(image)
-                }
-            }
-
-            PHOTO_OPERATION_DELETE -> {
-                image.doDelete()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    AlbumController.addImage(image)
-                }
-                refreshTrashButton()
-            }
-        }
-
+        refreshTrashButton()
         if (operationType == PHOTO_OPERATION_CANCEL) {
             refreshTitle()
             return
         }
 
-        mAlbum?.takeIf { it.isOperated() }?.let { album ->
+        mOperationViewModel.getAlbum()?.takeIf { it.isOperated() }?.let { album ->
             if (album.images.any { it.isDelete() }) {
                 openTrashActivity()
             }
@@ -545,7 +509,7 @@ class OperationActivity : BaseActivity<ActivityOperationBinding>() {
                 }
             }
 
-            mUpImageViewRectF = AndroidUtils.getVisibleImageRect(binding.ivUpImage)
+            mUpImageViewRectF = AndroidUtils.getVisibleRectInImageView(binding.ivUpImage)
             if (mUpImageViewRectF != null && mUpImageViewRectF!!.contains(x, y)) {
                 mShowMagnifyPhotoRunnable = Runnable {
                     showMagnifyImageView(
