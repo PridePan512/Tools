@@ -9,10 +9,10 @@ import android.view.MotionEvent
 import android.view.View
 import com.example.lib.mvvm.BaseActivity
 import com.example.tool.R
-import com.example.tool.databinding.ActivityReactionTestAvtivityBinding
+import com.example.tool.databinding.ActivityReactionTestBinding
 import java.util.concurrent.ThreadLocalRandom
 
-class ReactionTestActivity : BaseActivity<ActivityReactionTestAvtivityBinding>() {
+class ReactionTestActivity : BaseActivity<ActivityReactionTestBinding>() {
     private val mHandler: Handler = Handler(Looper.getMainLooper())
     private var mColorChangeTime = 0L
 
