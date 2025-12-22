@@ -7,6 +7,17 @@
     android:layout_height="match_parent"
     tools:context=".reactiontest.ReactionTestActivity">
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_back"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:icon="@drawable/ic_vector_back"
+        app:iconSize="24dp"
+        app:iconTint="@color/text_main"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.constraintlayout.utils.widget.ImageFilterView
         android:id="@+id/iv_area"
         android:layout_width="0dp"
@@ -37,6 +48,20 @@
         android:id="@+id/tv_result"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:gravity="center"
+        android:textColor="@color/text_main"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/tv_record"
+        app:layout_constraintEnd_toStartOf="@id/iv_area"
+        app:layout_constraintTop_toTopOf="@id/iv_area"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/tv_record"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="20dp"
         android:gravity="center"
@@ -45,6 +70,6 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@id/iv_area"
         app:layout_constraintEnd_toStartOf="@id/iv_area"
-        app:layout_constraintTop_toTopOf="@id/iv_area" />
+        app:layout_constraintTop_toBottomOf="@id/tv_result" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

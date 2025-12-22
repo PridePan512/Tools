@@ -7,8 +7,12 @@ import android.os.Looper
 import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.lib.mvvm.BaseActivity
 import com.example.tool.R
+import com.example.tool.business.ConfigHost
 import com.example.tool.databinding.ActivityReactionTestBinding
 import java.util.concurrent.ThreadLocalRandom
 
@@ -19,6 +23,10 @@ class ReactionTestActivity : BaseActivity<ActivityReactionTestBinding>() {
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        ConfigHost.getReactionTestRecord(this).takeIf { it != 0L }?.let {
+            binding.tvRecord.text = getString(R.string.reaction_test_record, it)
+        }
 
         binding.ivArea.setOnTouchListener { view: View, motionEvent: MotionEvent ->
             when (motionEvent.action) {
@@ -32,10 +40,16 @@ class ReactionTestActivity : BaseActivity<ActivityReactionTestBinding>() {
 
                 MotionEvent.ACTION_UP -> {
                     binding.tvResult.text =
-                        if (mColorChangeTime == 0L) getString(R.string.reaction_test_warning) else getString(
-                            R.string.reaction_test_result,
-                            SystemClock.elapsedRealtime() - mColorChangeTime
-                        )
+                        if (mColorChangeTime == 0L) getString(R.string.reaction_test_warning) else {
+                            val spendTime = SystemClock.elapsedRealtime() - mColorChangeTime
+                            val record = ConfigHost.getReactionTestRecord(this)
+                            if (record == 0L || spendTime < record) {
+                                ConfigHost.setReactionTestRecord(this, spendTime)
+                                binding.tvRecord.text =
+                                    getString(R.string.reaction_test_record, spendTime)
+                            }
+                            getString(R.string.reaction_test_result, spendTime)
+                        }
                     mColorChangeTime = 0L
                     view.setBackgroundColor(getColor(R.color.reaction_test_area_normal))
                     mHandler.removeCallbacksAndMessages(null)
@@ -44,5 +58,17 @@ class ReactionTestActivity : BaseActivity<ActivityReactionTestBinding>() {
             true
         }
 
+        binding.btnBack.setOnClickListener { finish() }
+    }
+
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val param = binding.btnBack.layoutParams as ViewGroup.MarginLayoutParams
+            param.setMargins(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            binding.btnBack.layoutParams = param
+            WindowInsetsCompat.CONSUMED
+        }
     }
 }
