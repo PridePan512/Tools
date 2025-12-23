@@ -35,7 +35,7 @@ class ReactionTestActivity : BaseActivity<ActivityReactionTestBinding>() {
                     mHandler.postDelayed({
                         mColorChangeTime = SystemClock.elapsedRealtime()
                         view.setBackgroundColor(getColor(R.color.reaction_test_area_change))
-                    }, ThreadLocalRandom.current().nextLong(2000, 5000))
+                    }, ThreadLocalRandom.current().nextLong(2000, 4000))
                 }
 
                 MotionEvent.ACTION_UP -> {
@@ -59,6 +59,11 @@ class ReactionTestActivity : BaseActivity<ActivityReactionTestBinding>() {
         }
 
         binding.btnBack.setOnClickListener { finish() }
+        binding.ivClear.setOnClickListener {
+            binding.tvRecord.text = null
+            binding.tvResult.text = null
+            ConfigHost.setReactionTestRecord(this, 0L)
+        }
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
