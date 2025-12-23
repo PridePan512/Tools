@@ -19,6 +19,8 @@
         </activity>
         <activity
             android:name=".reactiontest.ReactionTestActivity" />
+        <activity
+            android:name=".random.GenerateRandomActivity" />
     </application>
 
 </manifest>

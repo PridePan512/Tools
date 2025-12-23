@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="20dp">
+
+    <ImageView
+        android:id="@+id/iv_number"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_vector_number"
+        app:layout_constraintBottom_toBottomOf="@id/switch_number"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/switch_number" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/number"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="@+id/iv_number"
+        app:layout_constraintStart_toEndOf="@id/iv_number"
+        app:layout_constraintTop_toTopOf="@+id/iv_number" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_range"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/title_generate_random_number"
+        android:textSize="15sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/iv_number" />
+
+    <com.google.android.material.slider.RangeSlider
+        android:id="@+id/slider_range_number"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:stepSize="1"
+        android:valueFrom="0"
+        android:valueTo="8"
+        app:layout_constraintTop_toBottomOf="@id/tv_range" />
+
+    <ImageView
+        android:id="@+id/iv_upper_case"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_vector_upper_case"
+        app:layout_constraintBottom_toBottomOf="@id/switch_upper_case"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/switch_upper_case" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/upper_case"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="@+id/iv_upper_case"
+        app:layout_constraintStart_toEndOf="@id/iv_upper_case"
+        app:layout_constraintTop_toTopOf="@+id/iv_upper_case" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_upper_case"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/slider_range_number" />
+
+    <ImageView
+        android:id="@+id/iv_lower_case"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_vector_lower_case"
+        app:layout_constraintBottom_toBottomOf="@id/switch_lower_case"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/switch_lower_case" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/lower_case"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="@+id/iv_lower_case"
+        app:layout_constraintStart_toEndOf="@id/iv_lower_case"
+        app:layout_constraintTop_toTopOf="@+id/iv_lower_case" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_lower_case"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/switch_upper_case" />
+
+
+    <ImageView
+        android:id="@+id/iv_special_character"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_vector_special_character"
+        app:layout_constraintBottom_toBottomOf="@id/switch_special_character"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/switch_special_character" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/special_character"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="@+id/iv_special_character"
+        app:layout_constraintStart_toEndOf="@id/iv_special_character"
+        app:layout_constraintTop_toTopOf="@+id/iv_special_character" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_special_character"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/switch_lower_case" />
+
+
+    <TextView
+        android:id="@+id/tv_length"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="@string/length_character"
+        android:textSize="15sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/switch_special_character" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

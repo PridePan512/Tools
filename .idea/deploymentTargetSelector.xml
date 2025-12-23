@@ -7,16 +7,8 @@
       </SelectionState>
       <SelectionState runConfigName="swipeclean">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-08-21T02:56:34.526614700Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=RFCT810H3EL" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="test()">
+      <SelectionState runConfigName="tool">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

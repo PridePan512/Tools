@@ -8,4 +8,18 @@
     <string name="reaction_test_instruction">摁下\n开始测试反应时间\n颜色改变时立即抬起手指</string>
     <string name="reaction_test_warning">注意：\n1. 测试时请保持手指在屏幕上\n2. 测试结束后再松开手指</string>
 
+    <!--    generate random number-->
+    <string name="title_generate_random_number">范围</string>
+    <string name="min_generate_random_number">最小值</string>
+    <string name="max_generate_random_number">最大值</string>
+    <string name="amount_generate_random_number">生成数量</string>
+    <string name="repeat_generate_random_number">允许重复</string>
+    <string name="generate">生成</string>
+    <string name="number">数字</string>
+    <string name="upper_case">大写字母</string>
+    <string name="lower_case">小写字母</string>
+    <string name="special_character">特殊字符</string>
+    <string name="length_character">文本字符长度</string>
+    <string name="random_title">随机生成</string>
+
 </resources>
