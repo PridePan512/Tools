@@ -14,6 +14,7 @@ import com.example.lib.mvvm.BaseActivity
 import com.example.tool.R
 import com.example.tool.business.ConfigHost
 import com.example.tool.databinding.ActivityReactionTestBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.concurrent.ThreadLocalRandom
 
 class ReactionTestActivity : BaseActivity<ActivityReactionTestBinding>() {
@@ -60,9 +61,15 @@ class ReactionTestActivity : BaseActivity<ActivityReactionTestBinding>() {
 
         binding.btnBack.setOnClickListener { finish() }
         binding.ivClear.setOnClickListener {
-            binding.tvRecord.text = null
-            binding.tvResult.text = null
-            ConfigHost.setReactionTestRecord(this, 0L)
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.text_clear_confirm)
+                .setPositiveButton(R.string.clear) { _, _ ->
+                    binding.tvRecord.text = null
+                    binding.tvResult.text = null
+                    ConfigHost.setReactionTestRecord(this, 0L)
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
         }
     }
 

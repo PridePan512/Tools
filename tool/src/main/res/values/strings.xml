@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">tool</string>
 
+    <string name="cancel">取消</string>
+    <string name="clear">清除</string>
+    <string name="text_clear_confirm">确定要清除吗？</string>
+
     <!--    reaction test-->
     <string name="reaction_test_title">反应测试</string>
     <string name="reaction_test_result">反应时间：%dms</string>
