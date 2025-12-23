@@ -21,6 +21,8 @@
             android:name=".reactiontest.ReactionTestActivity" />
         <activity
             android:name=".random.GenerateRandomActivity" />
+        <activity
+            android:name=".compass.CompassActivity" />
     </application>
 
 </manifest>

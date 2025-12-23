@@ -3,6 +3,7 @@ package com.example.tool
 import android.content.Intent
 import android.os.Bundle
 import com.example.lib.mvvm.BaseActivity
+import com.example.tool.compass.CompassActivity
 import com.example.tool.databinding.ActivityMainBinding
 import com.example.tool.random.GenerateRandomActivity
 import com.example.tool.reactiontest.ReactionTestActivity
@@ -15,6 +16,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
         binding.btnRandom.setOnClickListener {
             startActivity(Intent(this, GenerateRandomActivity::class.java))
+        }
+        binding.btnCompass.setOnClickListener {
+            startActivity(Intent(this, CompassActivity::class.java))
         }
     }
 }
