@@ -7,6 +7,7 @@ import com.example.tool.compass.CompassActivity
 import com.example.tool.databinding.ActivityMainBinding
 import com.example.tool.random.GenerateRandomActivity
 import com.example.tool.reactiontest.ReactionTestActivity
+import com.example.tool.wallpaper.activity.WallpaperActivity
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +20,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
         binding.btnCompass.setOnClickListener {
             startActivity(Intent(this, CompassActivity::class.java))
+        }
+        binding.btnWallpaper.setOnClickListener {
+            startActivity(Intent(this, WallpaperActivity::class.java))
         }
     }
 }
