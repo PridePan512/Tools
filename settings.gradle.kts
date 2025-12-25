@@ -21,6 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Tools"
 include(":swipeclean")
-include(":downloader")
 include(":lib")
 include(":tool")
