@@ -7,4 +7,9 @@
     android:layout_height="match_parent"
     tools:context=".wallpaper.activity.WallpaperActivity">
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_wallpaper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:overScrollMode="never" />
 </androidx.constraintlayout.widget.ConstraintLayout>
