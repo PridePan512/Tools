@@ -7,43 +7,40 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/btn_reaction_test"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/reaction_test_title"
-        app:layout_constraintBottom_toTopOf="@id/btn_random"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btn_random"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/random_title"
-        app:layout_constraintBottom_toBottomOf="@+id/btn_compass"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_reaction_test" />
+        <Button
+            android:id="@+id/btn_reaction_test"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reaction_test_title" />
 
-    <Button
-        android:id="@+id/btn_compass"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="指南针"
-        app:layout_constraintBottom_toTopOf="@id/btn_wallpaper"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_random" />
+        <Button
+            android:id="@+id/btn_random"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/random_title" />
 
-    <Button
-        android:id="@+id/btn_wallpaper"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="壁纸"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_compass" />
+        <Button
+            android:id="@+id/btn_compass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="指南针" />
+
+        <Button
+            android:id="@+id/btn_wallpaper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="壁纸" />
+
+        <Button
+            android:id="@+id/btn_level"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="水平仪" />
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

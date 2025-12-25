@@ -7,6 +7,7 @@ import com.example.tool.compass.CompassActivity
 import com.example.tool.databinding.ActivityMainBinding
 import com.example.tool.random.GenerateRandomActivity
 import com.example.tool.reactiontest.ReactionTestActivity
+import com.example.tool.spiritlevel.SpiritLevelActivity
 import com.example.tool.wallpaper.activity.WallpaperActivity
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
@@ -23,6 +24,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
         binding.btnWallpaper.setOnClickListener {
             startActivity(Intent(this, WallpaperActivity::class.java))
+        }
+        binding.btnLevel.setOnClickListener {
+            startActivity(Intent(this, SpiritLevelActivity::class.java))
         }
     }
 }

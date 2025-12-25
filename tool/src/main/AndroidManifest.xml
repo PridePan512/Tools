@@ -23,6 +23,7 @@
         <activity android:name=".random.GenerateRandomActivity" />
         <activity android:name=".compass.CompassActivity" />
         <activity android:name=".wallpaper.activity.WallpaperActivity" />
+        <activity android:name=".spiritlevel.SpiritLevelActivity" />
     </application>
 
 </manifest>
