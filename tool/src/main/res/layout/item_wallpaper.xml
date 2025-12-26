@@ -1,24 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/ivWallpaper"
+        android:id="@+id/iv_wallpaper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:adjustViewBounds="true" />
+        android:adjustViewBounds="true"
+        android:foreground="#20000000"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_height="200dp" />
 
     <TextView
-        android:id="@+id/tvCopyright"
+        android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
-        android:layout_margin="5dp"
-        android:padding="6dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="3dp"
+        android:ellipsize="end"
+        android:lines="1"
         android:textColor="@android:color/white"
         android:textSize="12sp"
-        android:maxLines="2"
+        app:layout_constraintBottom_toTopOf="@id/tv_copyright"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_copyright"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="12dp"
         android:ellipsize="end"
-        android:background="#66000000" />
-</FrameLayout>
+        android:lines="1"
+        android:textColor="@android:color/white"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

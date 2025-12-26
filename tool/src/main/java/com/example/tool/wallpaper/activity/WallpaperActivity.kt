@@ -2,17 +2,9 @@ package com.example.tool.wallpaper.activity
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
-import android.view.ViewGroup
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.setPadding
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.example.lib.mvvm.BaseActivity
 import com.example.tool.databinding.ActivityWallpaperBinding
 import com.example.tool.wallpaper.adapter.WallpaperAdapter
@@ -54,15 +46,6 @@ class WallpaperActivity : BaseActivity<ActivityWallpaperBinding>() {
                 }
             }
         })
-    }
-
-    override fun onPostCreate(savedInstanceState: Bundle?) {
-        super.onPostCreate(savedInstanceState)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(0, systemBars.top, 0, 0)
-            insets
-        }
     }
 
     private fun loadNextPage() {

@@ -1,7 +1,5 @@
 package com.example.tool.spiritlevel;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -15,7 +13,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.lib.utils.DensityUtils;
+import com.example.lib.utils.AndroidUtils;
 import com.example.tool.R;
 
 
@@ -61,7 +59,7 @@ public class SpiritLevelActivity extends AppCompatActivity implements SensorEven
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mRotationVectorSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
-        mMaxRadius = DensityUtils.dpToPx(124);
+        mMaxRadius = AndroidUtils.INSTANCE.dpToPx(124);
     }
 
     @Override
